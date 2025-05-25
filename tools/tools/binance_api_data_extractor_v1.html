@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Binance Candles CSV Export</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: 2rem auto; padding: 1rem; }
+    label { display: block; margin: .5rem 0; }
+    #intervals label { display: inline-block; margin-right: 1rem; }
+    #progress { margin-top: 1rem; }
+    #spinner { display: none; }
+    .error { color: red; }
+  </style>
+</head>
+<body>
+  <h1>Binance Candlestick CSV Export</h1>
+
+  <!-- Eingabemaske -->
+  <label for="symbolInput">Trading-Pair (z. B. BTCUSDT) oder Token-Adresse:</label>
+  <input type="text" id="symbolInput" placeholder="z.B. BTCUSDT" size="20">
+
+  <!-- Intervall-Auswahl -->
+  <div id="intervals">
+    <strong>Intervalle wählen:</strong><br>
+    <!-- Checkboxen werden per JS befüllt -->
+  </div>
+
+  <!-- Start-Button -->
+  <button id="startBtn">Download starten</button>
+
+  <!-- Status & Spinner -->
+  <div id="progress">
+    <span id="status"></span>
+    <span id="spinner">⏳ Läuft…</span>
+  </div>
+  <div id="errorMsg" class="error"></div>
+
+  <script>
+  // ———  Konfiguration  ———
+  const BASE_URL      = 'https://api.binance.com';
+  const PAGE_LIMIT    = 1000;               // Max Kerzen/Request
+  const RATE_LIMIT    = 6000;               // Weight-Units/Minute
+  const INTERVALS     = [                   // Definition aller Intervalle
+    { key: '1h',  label: '1 Stunde'   },
+    { key: '1d',  label: '1 Tag'      },
+    { key: '3d',  label: '3 Tage'     },
+    { key: '1w',  label: '1 Woche'    },
+    { key: '1M',  label: '1 Monat'    },
+  ];
+
+  // ———  Hilfsfunktionen  ———
+  function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  let usedWeight = 0;
+  async function throttle(weight = 2) {
+    usedWeight += weight;
+    if (usedWeight >= RATE_LIMIT * 0.9) {
+      await sleep(60000);    // 1 Minute pausieren
+      usedWeight = 0;
+    }
+  }
+
+  // Tauscht Token-Adresse gegen Trading-Pair, validiert Symbol
+  async function resolveSymbol(input) {
+    const info = await fetch(`${BASE_URL}/api/v3/exchangeInfo`).then(r => r.json());
+    // Suche exaktes Trading-Pair
+    let match = info.symbols.find(s => s.symbol === input.toUpperCase());
+    if (match) return match.symbol;
+    // Suche nach Token-Address (in quoteAsset oder baseAsset)
+    match = info.symbols.find(s =>
+      (s.baseAsset === input) || (s.quoteAsset === input)
+    );
+    if (match) return match.symbol;
+    throw new Error('Ungültiges Symbol oder Adresse');
+  }
+
+  // Holt alle Kerzen-Daten für ein Intervall per Pagination
+  async function fetchAllCandles(symbol, interval) {
+    let all = [];
+    let endTime = Date.now();
+    while (true) {
+      await throttle(2);
+      const url = `${BASE_URL}/api/v3/klines`
+        + `?symbol=${symbol}`
+        + `&interval=${interval}`
+        + `&limit=${PAGE_LIMIT}`
+        + `&endTime=${endTime}`;
+      const resp = await fetch(url);
+      if (resp.status === 429) {
+        // Rate-Limit erwischt → Backoff
+        await sleep(1000);
+        continue;
+      }
+      if (!resp.ok) throw new Error(`Fehler Fetch ${interval}: ${resp.status}`);
+      const batch = await resp.json();
+      if (batch.length === 0) break;
+      all = batch.concat(all);                 // alteste Daten an den Anfang
+      endTime = batch[0][0] - 1;               // Timestamp der ältesten Kerze
+      // kleine Pause, um API nicht zu überfluten
+      await sleep(200);
+    }
+    return all;
+  }
+
+  // Wandelt Daten-Array in CSV und startet Download
+  function downloadCSV(symbol, interval, data) {
+    const header = ['Open time','Open','High','Low','Close','Volume','Close time',
+      'Quote asset volume','Trades','Taker buy base asset vol','Taker buy quote asset vol','Ignore'];
+    const rows = data.map(r => r.join(','));
+    const csv = [ header.join(','), ...rows ].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `${symbol}_${interval}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  // ———  UI-Initialisierung  ———
+  const intervalsDiv = document.getElementById('intervals');
+  INTERVALS.forEach(iv => {
+    const lbl = document.createElement('label');
+    lbl.innerHTML = `<input type="checkbox" value="${iv.key}" checked> ${iv.label}`;
+    intervalsDiv.appendChild(lbl);
+  });
+
+  // ———  Haupt-Flow beim Klick  ———
+  document.getElementById('startBtn').addEventListener('click', async () => {
+    const status  = document.getElementById('status');
+    const spinner = document.getElementById('spinner');
+    const errorEl = document.getElementById('errorMsg');
+    status.textContent = '';
+    errorEl.textContent = '';
+    spinner.style.display = 'inline';
+
+    try {
+      const rawInput = document.getElementById('symbolInput').value.trim();
+      if (!rawInput) throw new Error('Bitte Symbol oder Adresse eingeben.');
+      status.textContent = 'Symbol validieren…';
+      const symbol = await resolveSymbol(rawInput);
+
+      // Gewählte Intervalle einlesen
+      const chosen = Array.from(intervalsDiv.querySelectorAll('input:checked'))
+        .map(ch => ch.value);
+      if (chosen.length === 0) throw new Error('Mindestens ein Intervall auswählen.');
+
+      // Für jedes Intervall Daten laden und CSV exportieren
+      for (let i = 0; i < chosen.length; i++) {
+        const iv = chosen[i];
+        status.textContent = `Lade ${iv} (${i+1}/${chosen.length})…`;
+        const data = await fetchAllCandles(symbol, iv);
+        downloadCSV(symbol, iv, data);
+      }
+
+      status.textContent = 'Fertig! Alle CSVs wurden heruntergeladen.';
+    } catch (err) {
+      errorEl.textContent = err.message;
+      status.textContent = '';
+    } finally {
+      spinner.style.display = 'none';
+    }
+  });
+  </script>
+</body>
+</html>

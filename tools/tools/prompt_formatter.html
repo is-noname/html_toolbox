@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Prompt Formatter</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #2d3748;
+            font-size: 2.5em;
+            font-weight: 700;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #4a5568;
+            font-size: 1.1em;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+            font-family: inherit;
+        }
+        
+        .template-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .template-card {
+            padding: 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        .template-card:hover {
+            border-color: #667eea;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .template-card.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        
+        .template-card h3 {
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+        
+        .template-card p {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin: 10px 0;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .output-container {
+            margin-top: 30px;
+            padding: 25px;
+            background: #f7fafc;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .output-container h3 {
+            margin-bottom: 15px;
+            color: #2d3748;
+        }
+        
+        .output {
+            background: #1a202c;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-word;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+        }
+        
+        .copy-btn {
+            background: #48bb78;
+            padding: 10px 20px;
+            font-size: 0.9em;
+            width: auto;
+            margin: 0;
+        }
+        
+        .copy-btn:hover {
+            background: #38a169;
+        }
+        
+        .advanced-options {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .checkbox-item input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            .template-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 Agent Prompt Formatter</h1>
+        
+        <div class="form-group">
+            <label>Template wählen:</label>
+            <div class="template-grid">
+                <div class="template-card" data-template="general">
+                    <h3>Allgemein</h3>
+                    <p>Standard-Template für die meisten Aufgaben</p>
+                </div>
+                <div class="template-card" data-template="coding">
+                    <h3>Coding</h3>
+                    <p>Optimiert für Programmieraufgaben</p>
+                </div>
+                <div class="template-card" data-template="analysis">
+                    <h3>Analyse</h3>
+                    <p>Für Datenanalyse und Auswertungen</p>
+                </div>
+                <div class="template-card" data-template="creative">
+                    <h3>Kreativ</h3>
+                    <p>Für kreative und Content-Aufgaben</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="userInput">Deine Aufgabe/Anfrage:</label>
+            <textarea id="userInput" placeholder="Beschreibe hier deine Aufgabe oder Anfrage..."></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label for="context">Kontext (optional):</label>
+            <textarea id="context" placeholder="Zusätzliche Informationen, Hintergrund, spezielle Anforderungen..."></textarea>
+        </div>
+        
+        <div class="advanced-options">
+            <h3>Erweiterte Optionen</h3>
+            <div class="checkbox-group">
+                <div class="checkbox-item">
+                    <input type="checkbox" id="stepByStep">
+                    <label for="stepByStep">Schritt-für-Schritt Anleitung</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="examples">
+                    <label for="examples">Beispiele anfordern</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="alternatives">
+                    <label for="alternatives">Alternative Lösungen</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="bestPractices">
+                    <label for="bestPractices">Best Practices</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="explain">
+                    <label for="explain">Erklärung der Lösung</label>
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="outputFormat">Gewünschtes Ausgabeformat:</label>
+            <select id="outputFormat">
+                <option value="">Standard</option>
+                <option value="code">Code mit Erklärung</option>
+                <option value="list">Strukturierte Liste</option>
+                <option value="markdown">Markdown Dokument</option>
+                <option value="json">JSON Format</option>
+                <option value="table">Tabellenformat</option>
+            </select>
+        </div>
+        
+        <button class="btn" onclick="generatePrompt()">Prompt generieren</button>
+        
+        <div id="outputContainer" class="output-container" style="display: none;">
+            <h3>Optimierter Agent-Prompt:</h3>
+            <div id="output" class="output"></div>
+            <button class="btn copy-btn" onclick="copyToClipboard()">In Zwischenablage kopieren</button>
+        </div>
+    </div>
+
+    <script>
+        // Template-Auswahl verwalten
+        let selectedTemplate = 'general';
+        
+        // Template-Karten clickbar machen
+        document.querySelectorAll('.template-card').forEach(card => {
+            card.addEventListener('click', () => {
+                // Alle anderen deselektieren
+                document.querySelectorAll('.template-card').forEach(c => c.classList.remove('selected'));
+                // Aktuelle selektieren
+                card.classList.add('selected');
+                selectedTemplate = card.dataset.template;
+            });
+        });
+        
+        // Standard-Template auswählen
+        document.querySelector('[data-template="general"]').classList.add('selected');
+        
+        // Template-Definitionen
+        const templates = {
+            general: {
+                prefix: "Du bist ein hilfreicher AI-Agent. Deine Aufgabe ist es, die folgende Anfrage präzise und strukturiert zu bearbeiten.",
+                structure: ["Aufgabenanalyse", "Lösungsansatz", "Umsetzung", "Ergebnis"]
+            },
+            coding: {
+                prefix: "Du bist ein erfahrener Programmierer und Code-Reviewer. Befolge Best Practices und erkläre deine Entscheidungen.",
+                structure: ["Problem verstehen", "Technische Lösung", "Code-Implementierung", "Testing & Optimierung"]
+            },
+            analysis: {
+                prefix: "Du bist ein Datenanalyst und sollst eine fundierte Analyse durchführen. Gehe methodisch vor und begründe deine Schlussfolgerungen.",
+                structure: ["Datenverständnis", "Analyse-Methodik", "Durchführung", "Interpretation & Empfehlungen"]
+            },
+            creative: {
+                prefix: "Du bist ein kreativer Content-Spezialist. Entwickle innovative und ansprechende Lösungen.",
+                structure: ["Kreative Ideenfindung", "Konzeptentwicklung", "Ausarbeitung", "Finalisierung"]
+            }
+        };
+        
+        function generatePrompt() {
+            const userInput = document.getElementById('userInput').value.trim();
+            const context = document.getElementById('context').value.trim();
+            const outputFormat = document.getElementById('outputFormat').value;
+            
+            if (!userInput) {
+                alert('Bitte gib eine Aufgabe oder Anfrage ein.');
+                return;
+            }
+            
+            const template = templates[selectedTemplate];
+            let prompt = template.prefix + "\n\n";
+            
+            // Hauptaufgabe
+            prompt += "## AUFGABE:\n" + userInput + "\n\n";
+            
+            // Kontext hinzufügen
+            if (context) {
+                prompt += "## KONTEXT:\n" + context + "\n\n";
+            }
+            
+            // Erweiterte Optionen prüfen
+            const options = [];
+            if (document.getElementById('stepByStep').checked) {
+                options.push("Erkläre jeden Schritt deines Vorgehens detailliert");
+            }
+            if (document.getElementById('examples').checked) {
+                options.push("Gib konkrete Beispiele zur Veranschaulichung");
+            }
+            if (document.getElementById('alternatives').checked) {
+                options.push("Zeige alternative Lösungsansätze auf");
+            }
+            if (document.getElementById('bestPractices').checked) {
+                options.push("Berücksichtige aktuelle Best Practices");
+            }
+            if (document.getElementById('explain').checked) {
+                options.push("Erkläre das 'Warum' hinter deinen Entscheidungen");
+            }
+            
+            if (options.length > 0) {
+                prompt += "## ANFORDERUNGEN:\n";
+                options.forEach(option => {
+                    prompt += "- " + option + "\n";
+                });
+                prompt += "\n";
+            }
+            
+            // Ausgabeformat
+            if (outputFormat) {
+                const formatInstructions = {
+                    code: "Formatiere die Antwort als Code mit ausführlichen Kommentaren und Erklärungen",
+                    list: "Strukturiere die Antwort als übersichtliche Liste mit Unterpunkten",
+                    markdown: "Erstelle die Antwort als gut formatiertes Markdown-Dokument",
+                    json: "Gib die Antwort in einem strukturierten JSON-Format aus",
+                    table: "Präsentiere die Informationen in Tabellenform"
+                };
+                
+                prompt += "## AUSGABEFORMAT:\n" + formatInstructions[outputFormat] + "\n\n";
+            }
+            
+            // Struktur-Vorgabe
+            prompt += "## STRUKTUR:\n";
+            prompt += "Gliedere deine Antwort nach folgenden Punkten:\n";
+            template.structure.forEach((point, index) => {
+                prompt += `${index + 1}. ${point}\n`;
+            });
+            prompt += "\n";
+            
+            // Abschluss
+            prompt += "Beginne jetzt mit der Bearbeitung und achte auf Vollständigkeit und Präzision.";
+            
+            // Ausgabe anzeigen
+            document.getElementById('output').textContent = prompt;
+            document.getElementById('outputContainer').style.display = 'block';
+            
+            // Smooth scroll zur Ausgabe
+            document.getElementById('outputContainer').scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'start' 
+            });
+        }
+        
+        async function copyToClipboard() {
+            const output = document.getElementById('output').textContent;
+            
+            try {
+                await navigator.clipboard.writeText(output);
+                
+                // Feedback für den User
+                const btn = document.querySelector('.copy-btn');
+                const originalText = btn.textContent;
+                btn.textContent = '✓ Kopiert!';
+                btn.style.background = '#48bb78';
+                
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = '';
+                }, 2000);
+                
+            } catch (err) {
+                // Fallback für ältere Browser
+                const textArea = document.createElement('textarea');
+                textArea.value = output;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                
+                alert('Prompt wurde kopiert!');
+            }
+        }
+        
+        // Enter-Taste in Textareas abfangen (optional)
+        document.getElementById('userInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                generatePrompt();
+            }
+        });
+    </script>
+</body>
+</html>

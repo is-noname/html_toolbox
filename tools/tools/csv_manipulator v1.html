@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSV Editor</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: sans-serif; margin: 0; padding: 1rem; }
+    .container { max-width: 800px; margin: auto; display: flex; flex-direction: column; gap: 1rem; }
+    .controls, .add-column { display: flex; flex-wrap: wrap; gap: .5rem; }
+    textarea { flex: 1 1 100%; height: 4rem; }
+    input, button, textarea { padding: .5rem; }
+    .preview table { width: 100%; border-collapse: collapse; }
+    .preview th, .preview td { border: 1px solid #ccc; padding: .3rem; }
+    @media (max-width: 600px) { .controls, .add-column { flex-direction: column; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>CSV Editor</h1>
+    <div class="controls">
+      <label>CSV-Datei: <input type="file" id="fileInput" accept=".csv"></label>
+      <label>Oder CSV einfügen:<textarea id="pasteArea" placeholder="CSV hier einfügen..."></textarea></label>
+      <button id="loadBtn">Laden</button>
+    </div>
+    <div class="add-column">
+      <input type="text" id="colHeader" placeholder="Neue Spaltenüberschrift">
+      <input type="number" id="colIndex" placeholder="Position (0-bas.)">
+      <input type="text" id="colDefault" placeholder="Standardwert">
+      <button id="addColBtn">Spalte hinzufügen</button>
+    </div>
+    <div class="preview">
+      <h2>Vorschau (10 Zeilen)</h2>
+      <table id="previewTable"></table>
+    </div>
+    <button id="exportBtn">Als CSV exportieren</button>
+  </div>
+
+  <script>
+    let data = [];
+
+    function parseCSV(text) {
+      return text.trim().split(/\r?\n/).map(r => r.split(','));
+    }
+
+    function serializeCSV(arr) {
+      return arr.map(r => r.join(',')).join('\n');
+    }
+
+    function renderPreview() {
+      const tbl = document.getElementById('previewTable');
+      tbl.innerHTML = '';
+      if (!data.length) return;
+      data.slice(0, 10).forEach((row, i) => {
+        const tr = document.createElement('tr');
+        row.forEach(cell => {
+          const el = i === 0 ? document.createElement('th') : document.createElement('td');
+          el.textContent = cell;
+          tr.appendChild(el);
+        });
+        tbl.appendChild(tr);
+      });
+    }
+
+    function loadCSV() {
+      const file = document.getElementById('fileInput').files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = e => {
+          try {
+            data = parseCSV(e.target.result);
+            renderPreview();
+          } catch {
+            alert('Ungültiges CSV-Format');
+          }
+        };
+        reader.onerror = () => alert('Fehler beim Lesen der Datei');
+        reader.readAsText(file, 'UTF-8');
+      } else {
+        const text = document.getElementById('pasteArea').value;
+        if (!text.trim()) return alert('Keine CSV-Daten gefunden');
+        try {
+          data = parseCSV(text);
+          renderPreview();
+        } catch {
+          alert('Ungültiges CSV-Format');
+        }
+      }
+    }
+
+    function addColumn() {
+      const h = document.getElementById('colHeader').value.trim();
+      const i = parseInt(document.getElementById('colIndex').value, 10);
+      const v = document.getElementById('colDefault').value;
+      if (!h || isNaN(i) || i < 0) return alert('Ungültige Eingabe');
+      data[0].splice(i, 0, h);
+      for (let r = 1; r < data.length; r++) data[r].splice(i, 0, v);
+      renderPreview();
+    }
+
+    function exportCSV() {
+      if (!data.length) return alert('Keine Daten zum Export');
+      const blob = new Blob([serializeCSV(data)], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'edited.csv';
+      a.click(); URL.revokeObjectURL(url);
+    }
+
+    document.getElementById('loadBtn').addEventListener('click', loadCSV);
+    document.getElementById('addColBtn').addEventListener('click', addColumn);
+    document.getElementById('exportBtn').addEventListener('click', exportCSV);
+  </script>
+</body>
+</html>

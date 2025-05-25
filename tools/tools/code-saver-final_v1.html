@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Saver</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 300px;
+            padding: 10px;
+            border: 1px solid #4CAF50;
+            border-radius: 4px;
+            font-family: monospace;
+            resize: vertical;
+            background-color: #f8f8f8;
+            color: #333;
+        }
+        
+        textarea:focus, input:focus {
+            outline: none;
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+        }
+        
+        .options {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .format-option {
+            padding: 8px 12px;
+            background-color: #eee;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #333;
+        }
+        
+        .format-option:hover {
+            background-color: #e0e0e0;
+        }
+        
+        .format-option.active {
+            background-color: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+            font-weight: bold;
+        }
+        
+        .custom-format {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 10px;
+        }
+        
+        .custom-format input {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-family: monospace;
+            flex-grow: 1;
+            max-width: 200px;
+            background-color: white;
+            color: #333;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        .filename-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        #filename {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            flex-grow: 1;
+            max-width: 200px;
+            background-color: white;
+            color: #333;
+        }
+        
+        .status {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            display: none;
+        }
+        
+        .success {
+            background-color: #dff0d8;
+            border: 1px solid #d6e9c6;
+            color: #3c763d;
+        }
+        
+        .error {
+            background-color: #f2dede;
+            border: 1px solid #ebccd1;
+            color: #a94442;
+        }
+        
+        .action-buttons {
+            margin-top: 10px;
+            margin-bottom: 15px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        @media (max-width: 480px) {
+            .filename-row, .actions, .action-buttons {
+                flex-direction: column;
+            }
+            .format-option {
+                flex-grow: 1;
+                text-align: center;
+            }
+            #filename {
+                max-width: 100%;
+            }
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Code Saver</h1>
+        
+        <div class="form-group">
+            <label for="code-input">Dein Code:</label>
+            <textarea id="code-input" placeholder="Füge deinen Code hier ein..." spellcheck="false" autofocus></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label>Format auswählen:</label>
+            <div class="options" id="format-options">
+                <div class="format-option active" data-format="js">JavaScript (.js)</div>
+                <div class="format-option" data-format="css">CSS (.css)</div>
+                <div class="format-option" data-format="html">HTML (.html)</div>
+                <div class="format-option" data-format="json">JSON (.json)</div>
+                <div class="format-option" data-format="txt">Text (.txt)</div>
+                <div class="format-option" data-format="py">Python (.py)</div>
+                <div class="format-option" data-format="jsx">React (.jsx)</div>
+                <div class="format-option" data-format="ts">TypeScript (.ts)</div>
+            </div>
+            
+            <div class="custom-format">
+                <input type="text" id="custom-format" placeholder="Eigenes Format (z.B. md)" maxlength="10">
+                <button id="add-format">Hinzufügen</button>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="filename">Dateiname (ohne Erweiterung):</label>
+            <div class="filename-row">
+                <input type="text" id="filename" placeholder="main" value="main">
+                <button id="download-btn">Herunterladen</button>
+                <button id="save-as-btn">Speichern unter...</button>
+                <button id="clear-btn">Alles löschen</button>
+            </div>
+        </div>
+        
+        <div class="action-buttons">
+            <button id="paste-btn">Aus Zwischenablage einfügen</button>
+        </div>
+        
+        <div id="status" class="status"></div>
+    </div>
+
+    <script>
+        // DOM-Elemente
+        const codeInput = document.getElementById('code-input');
+        const formatOptions = document.getElementById('format-options');
+        const customFormatInput = document.getElementById('custom-format');
+        const addFormatBtn = document.getElementById('add-format');
+        const filenameInput = document.getElementById('filename');
+        const downloadBtn = document.getElementById('download-btn');
+        const saveAsBtn = document.getElementById('save-as-btn');
+        const clearBtn = document.getElementById('clear-btn');
+        const pasteBtn = document.getElementById('paste-btn');
+        const statusDiv = document.getElementById('status');
+        
+        // Aktuelles Format
+        let currentFormat = 'js';
+
+        // Beim Laden der Seite gespeicherten Code abrufen
+        window.addEventListener('load', () => {
+            // Gespeicherten Code aus localStorage laden
+            const savedCode = localStorage.getItem('codeSaverContent');
+            if (savedCode) {
+                codeInput.value = savedCode;
+            }
+
+            // Gespeicherte benutzerdefinierte Formate laden
+            const savedFormats = localStorage.getItem('codeSaverCustomFormats');
+            if (savedFormats) {
+                try {
+                    const formats = JSON.parse(savedFormats);
+                    formats.forEach(format => {
+                        addFormatToList(format);
+                    });
+                } catch (e) {
+                    console.error('Fehler beim Laden der Formate:', e);
+                }
+            }
+
+            // Gespeichertes Format laden
+            const savedFormat = localStorage.getItem('codeSaverCurrentFormat');
+            if (savedFormat) {
+                const formatOption = document.querySelector(`.format-option[data-format="${savedFormat}"]`);
+                if (formatOption) {
+                    formatOption.click();
+                }
+            }
+
+            // Gespeicherten Dateinamen laden
+            const savedFilename = localStorage.getItem('codeSaverFilename');
+            if (savedFilename) {
+                filenameInput.value = savedFilename;
+            }
+        });
+        
+        // Code beim Eingeben speichern (verzögert zur Leistungsoptimierung)
+        let saveTimeout;
+        codeInput.addEventListener('input', () => {
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => {
+                localStorage.setItem('codeSaverContent', codeInput.value);
+            }, 500);
+        });
+        
+        // Dateinamen beim Ändern speichern
+        filenameInput.addEventListener('input', () => {
+            localStorage.setItem('codeSaverFilename', filenameInput.value);
+        });
+
+        // Event-Listener für Format-Optionen
+        formatOptions.addEventListener('click', (e) => {
+            if (e.target.classList.contains('format-option')) {
+                // Aktive Klasse von allen entfernen
+                document.querySelectorAll('.format-option').forEach(opt => {
+                    opt.classList.remove('active');
+                });
+                
+                // Aktive Klasse zum geklickten Element hinzufügen
+                e.target.classList.add('active');
+                
+                // Aktuelles Format aktualisieren und speichern
+                currentFormat = e.target.dataset.format;
+                localStorage.setItem('codeSaverCurrentFormat', currentFormat);
+            }
+        });
+        
+        // Funktion zum Hinzufügen eines Formats zur Liste
+        function addFormatToList(format) {
+            const newOption = document.createElement('div');
+            newOption.className = 'format-option';
+            newOption.dataset.format = format;
+            newOption.textContent = `${format.toUpperCase()} (.${format})`;
+            formatOptions.appendChild(newOption);
+            return newOption;
+        }
+        
+        // Event-Listener für "Format hinzufügen"-Button
+        addFormatBtn.addEventListener('click', () => {
+            // Format aus Input holen und bereinigen
+            const newFormat = customFormatInput.value.trim().toLowerCase();
+            
+            // Prüfen ob das Format gültig ist
+            if (newFormat && !newFormat.includes('.') && /^[a-z0-9]+$/.test(newFormat)) {
+                // Prüfen ob das Format bereits existiert
+                if (document.querySelector(`.format-option[data-format="${newFormat}"]`)) {
+                    showStatus(`Format .${newFormat} existiert bereits!`, 'error');
+                    return;
+                }
+                
+                // Zum Container hinzufügen
+                const newOption = addFormatToList(newFormat);
+                
+                // Input-Feld leeren
+                customFormatInput.value = '';
+                
+                // Auf das neue Format klicken (aktivieren)
+                newOption.click();
+                
+                // Benutzerdefinierte Formate speichern
+                saveCustomFormats();
+                
+                // Erfolgsmeldung anzeigen
+                showStatus(`Format .${newFormat} hinzugefügt!`, 'success');
+            } else {
+                // Fehlermeldung anzeigen
+                showStatus('Bitte gib ein gültiges Format ein (nur Buchstaben und Zahlen)!', 'error');
+            }
+        });
+
+        // Auch Enter-Taste für das Hinzufügen von Formaten
+        customFormatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addFormatBtn.click();
+            }
+        });
+        
+        // Benutzerdefinierte Formate speichern
+        function saveCustomFormats() {
+            const formats = [];
+            document.querySelectorAll('.format-option').forEach(opt => {
+                const format = opt.dataset.format;
+                // Nur benutzerdefinierte Formate speichern (nicht die vordefinierten)
+                if (!['js', 'css', 'html', 'json', 'txt', 'py', 'jsx', 'ts'].includes(format)) {
+                    formats.push(format);
+                }
+            });
+            localStorage.setItem('codeSaverCustomFormats', JSON.stringify(formats));
+        }
+        
+        // Event-Listener für den Download-Button
+        downloadBtn.addEventListener('click', () => {
+            downloadCurrentFile();
+        });
+        
+        // Event-Listener für den "Speichern unter"-Button
+        saveAsBtn.addEventListener('click', () => {
+            const newFilename = prompt('Dateinamen eingeben (ohne Erweiterung):', filenameInput.value);
+            if (newFilename !== null) {
+                filenameInput.value = newFilename.trim() || 'main';
+                localStorage.setItem('codeSaverFilename', filenameInput.value);
+                downloadCurrentFile();
+            }
+        });
+        
+        // Funktion zum Herunterladen der aktuellen Datei
+        function downloadCurrentFile() {
+            // Code und Dateinamen aus den Inputs holen
+            const code = codeInput.value;
+            const filename = filenameInput.value.trim() || 'main';
+            
+            // Prüfen, ob Code vorhanden ist
+            if (!code) {
+                showStatus('Bitte füge zuerst Code ein!', 'error');
+                return;
+            }
+            
+            // Datei-Download erstellen
+            downloadFile(code, `${filename}.${currentFormat}`);
+            
+            // Erfolgsmeldung anzeigen
+            showStatus(`Datei ${filename}.${currentFormat} wurde heruntergeladen!`, 'success');
+        }
+        
+        // Event-Listener für den "Aus Zwischenablage einfügen"-Button
+        pasteBtn.addEventListener('click', async () => {
+            try {
+                const text = await navigator.clipboard.readText();
+                codeInput.value = text;
+                localStorage.setItem('codeSaverContent', text);
+                showStatus('Code aus Zwischenablage eingefügt!', 'success');
+            } catch (err) {
+                showStatus('Fehler beim Zugriff auf die Zwischenablage. Bitte manuell einfügen.', 'error');
+                console.error('Fehler beim Zugriff auf die Zwischenablage:', err);
+            }
+        });
+        
+        // Event-Listener für den Löschen-Button
+        clearBtn.addEventListener('click', () => {
+            if (confirm('Möchtest du wirklich alles löschen?')) {
+                codeInput.value = '';
+                localStorage.removeItem('codeSaverContent');
+                showStatus('Inhalt wurde gelöscht!', 'success');
+            }
+        });
+        
+        // Funktion zum Herunterladen der Datei
+        function downloadFile(content, filename) {
+            // Bestimme MIME-Typ basierend auf Dateiendung
+            let mimeType = 'text/plain';
+            if (currentFormat === 'html') mimeType = 'text/html';
+            else if (currentFormat === 'json') mimeType = 'application/json';
+            else if (currentFormat === 'js' || currentFormat === 'jsx') mimeType = 'application/javascript';
+            else if (currentFormat === 'css') mimeType = 'text/css';
+            
+            // Blob mit dem Inhalt erstellen
+            const blob = new Blob([content], { type: mimeType });
+            
+            // URL für den Blob erstellen
+            const url = URL.createObjectURL(blob);
+            
+            // Link erstellen und klicken
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            
+            // Aufräumen
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 100);
+        }
+        
+        // Funktion zum Anzeigen von Status-Meldungen
+        function showStatus(message, type) {
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+            statusDiv.style.display = 'block';
+            
+            // Status nach 3 Sekunden ausblenden
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        // Tastenkombination zum Speichern (Strg+S)
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault(); // Standardverhalten verhindern
+                downloadBtn.click();
+            }
+        });
+    </script>
+</body>
+</html>

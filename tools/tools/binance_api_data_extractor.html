@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Binance Candles CSV Export (mit Datumskonvertierung)</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: 2rem auto; padding: 1rem; }
+    label { display: block; margin: .5rem 0; }
+    #intervals label { display: inline-block; margin-right: 1rem; }
+    #progress { margin-top: 1rem; }
+    #spinner { display: none; }
+    .error { color: red; }
+  </style>
+</head>
+<body>
+  <h1>Binance Candlestick CSV Export</h1>
+
+  <!-- Eingabemaske -->
+  <label for="symbolInput">Trading-Pair (z. B. BTCUSDT) oder Token-Adresse:</label>
+  <input type="text" id="symbolInput" placeholder="z.B. BTCUSDT" size="20">
+
+  <!-- Intervall-Auswahl -->
+  <div id="intervals"><strong>Intervalle wählen:</strong><br></div>
+
+  <!-- Start-Button -->
+  <button id="startBtn">Download starten</button>
+
+  <!-- Status & Spinner -->
+  <div id="progress">
+    <span id="status"></span>
+    <span id="spinner">⏳ Läuft…</span>
+  </div>
+  <div id="errorMsg" class="error"></div>
+
+  <script>
+  // ———  Konfiguration  ———
+  const BASE_URL      = 'https://api.binance.com';
+  const PAGE_LIMIT    = 1000;
+  const RATE_LIMIT    = 6000;
+  const INTERVALS     = [
+    { key: '1h',  label: '1 Stunde' },
+    { key: '1d',  label: '1 Tag'    },
+    { key: '3d',  label: '3 Tage'   },
+    { key: '1w',  label: '1 Woche'  },
+    { key: '1M',  label: '1 Monat'  },
+  ];
+
+  function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+  let usedWeight = 0;
+  async function throttle(weight=2){
+    usedWeight += weight;
+    if (usedWeight >= RATE_LIMIT*0.9){
+      await sleep(60000);
+      usedWeight = 0;
+    }
+  }
+
+  // Symbol validieren
+  async function resolveSymbol(input){
+    const info = await fetch(`${BASE_URL}/api/v3/exchangeInfo`).then(r=>r.json());
+    let s = info.symbols.find(x=>x.symbol===input.toUpperCase());
+    if (s) return s.symbol;
+    s = info.symbols.find(x=>x.baseAsset===input || x.quoteAsset===input);
+    if (s) return s.symbol;
+    throw new Error('Ungültiges Symbol oder Adresse');
+  }
+
+  // Alle Kerzen laden
+  async function fetchAllCandles(symbol, interval){
+    let all = [], endTime = Date.now();
+    while(true){
+      await throttle();
+      const url = `${BASE_URL}/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${PAGE_LIMIT}&endTime=${endTime}`;
+      const resp = await fetch(url);
+      if (resp.status===429){ await sleep(1000); continue; }
+      if (!resp.ok) throw new Error(`Fetch-Fehler ${interval}: ${resp.status}`);
+      const batch = await resp.json();
+      if (!batch.length) break;
+      all = batch.concat(all);
+      endTime = batch[0][0] - 1;
+      await sleep(200);
+    }
+    return all;
+  }
+
+  // CSV mit Datumsumwandlung
+  function downloadCSV(symbol, interval, data){
+    const header = [
+      'Open time (Datum)', 'Open time (ms)',
+      'Open','High','Low','Close','Volume',
+      'Close time (Datum)', 'Close time (ms)',
+      'Quote asset volume','Trades','Taker buy base asset vol','Taker buy quote asset vol','Ignore'
+    ];
+    // Helper: formatiertes Datum in Europe/Berlin
+    const fmt = ms => new Date(ms)
+      .toISOString()            // "2021-05-25T00:00:00.000Z"
+      .replace('T', ' ')        // "2021-05-25 00:00:00.000Z"
+      .slice(0, 19);            // "2021-05-25 00:00:00"
+    const rows = data.map(r=>{
+      const openMs  = r[0], closeMs = r[6];
+      const openDt  = fmt(openMs);
+      const closeDt = fmt(closeMs);
+      // Neue Reihenfolge: Datum, ms, die restlichen Felder, Datum, ms, restliche Felder
+      return [
+        openDt, openMs,
+        r[1],r[2],r[3],r[4],r[5],
+        closeDt, closeMs,
+        r[7],r[8],r[9],r[10],r[11]
+      ].join(',');
+    });
+    const csv = [ header.join(','), ...rows ].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `${symbol}_${interval}_readable_dates.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  // UI aufbauen
+  const divIv = document.getElementById('intervals');
+  INTERVALS.forEach(iv=>{
+    const lbl = document.createElement('label');
+    lbl.innerHTML = `<input type="checkbox" value="${iv.key}" checked> ${iv.label}`;
+    divIv.appendChild(lbl);
+  });
+
+  document.getElementById('startBtn').onclick = async ()=>{
+    const status  = document.getElementById('status');
+    const spinner = document.getElementById('spinner');
+    const errorEl = document.getElementById('errorMsg');
+    status.textContent = ''; errorEl.textContent = '';
+    spinner.style.display = 'inline';
+    try {
+      const inpt = document.getElementById('symbolInput').value.trim();
+      if (!inpt) throw new Error('Bitte Symbol oder Adresse eingeben.');
+      status.textContent = 'Symbol prüfen…';
+      const symbol = await resolveSymbol(inpt);
+
+      const chosen = Array.from(divIv.querySelectorAll('input:checked')).map(x=>x.value);
+      if (!chosen.length) throw new Error('Mindestens ein Intervall wählen.');
+
+      for (let i=0; i<chosen.length; i++){
+        const iv = chosen[i];
+        status.textContent = `Lade ${iv} (${i+1}/${chosen.length})…`;
+        const data = await fetchAllCandles(symbol, iv);
+        downloadCSV(symbol, iv, data);
+      }
+      status.textContent = 'Fertig – CSVs mit lesbaren Datumswerten heruntergeladen.';
+    } catch(err){
+      errorEl.textContent = err.message;
+      status.textContent = '';
+    } finally {
+      spinner.style.display = 'none';
+    }
+  };
+  </script>
+</body>
+</html>
