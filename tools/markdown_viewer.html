@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<!--
+  Markdown Viewer
+
+  Übersicht:
+  - **Drag & Drop**: Datei (.md) auf den Bereich ziehen.
+  - **Klick**: Auf den Bereich klicken, um Datei auszuwählen.
+  - **Copy-Paste**: Markdown direkt im oberen Textfeld einfügen.
+
+  Anpassung:
+  - **Styles** im <style>-Block: Farben von Hintergrund, Text, Code-Inline, Code-Blocks, Drop-Area.
+  - **Highlight.js-Theme**: Link im <head> (`.css`-Datei) austauschen.
+-->
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Markdown Viewer</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github-dark.min.css">
+  <style>
+    /* Grundlayout */
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 1rem;
+      background: #fff; /* Seiten-Hintergrund */
+      color: #333;     /* Standard-Textfarbe */
+    }
+    /* Copy-Paste-Feld */
+    #paste {
+      width: 100%;
+      min-height: 3rem;
+      padding: 0.5rem;
+      margin-bottom: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      resize: vertical;
+      font-family: inherit;
+    }
+    /* Drag & Drop Bereich */
+    #drop {
+      border: 2px dashed #ccc;
+      padding: 2rem;
+      text-align: center;
+      color: #666;
+      margin-bottom: 1rem;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    /* Zustand beim Dragover */
+    #drop.dragover {
+      border-color: #666;
+    }
+    /* Überschriften im Content */
+    article h1, article h2, article h3 {
+      margin-top: 1.5rem;
+    }
+    /* Inline-Code */
+    code {
+      background: #f5f5f5;
+      padding: 0.2em 0.4em;
+      border-radius: 4px;
+    }
+    /* Code-Blöcke */
+    pre {
+      background: #2d2d2d;
+      color: #ccc;
+      padding: 1em;
+      overflow: auto;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Copy-Paste-Funktion -->
+  <textarea id="paste" placeholder="Oder hier Markdown einfügen..."></textarea>
+
+  <!-- Datei-Import -->
+  <div id="drop">Ziehe hier eine .md-Datei hinein oder klicke zum Auswählen</div>
+  <input type="file" id="file" accept=".md" style="display:none">
+
+  <!-- Gerenderter Inhalt -->
+  <article id="content"></article>
+
+  <!-- Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+  <script>
+    const paste = document.getElementById('paste'),
+          drop  = document.getElementById('drop'),
+          file  = document.getElementById('file'),
+          content = document.getElementById('content');
+
+    // Datei laden: Drag&Drop + Klick
+    ['dragenter','dragover'].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.add('dragover'); }));
+    ['dragleave','drop'].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.remove('dragover'); }));
+    drop.addEventListener('click', () => file.click());
+    drop.addEventListener('drop', ev => loadFile(ev.dataTransfer.files[0]));
+    file.addEventListener('change', () => loadFile(file.files[0]));
+
+    // Copy-Paste: Render bei Eingabe
+    paste.addEventListener('input', () => render(paste.value));
+
+    function loadFile(f) {
+      if (!f || !f.name.endsWith('.md')) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        paste.value = reader.result;
+        render(reader.result);
+      };
+      reader.readAsText(f);
+    }
+
+    function render(md) {
+      content.innerHTML = marked.parse(md);
+      content.querySelectorAll('pre code').forEach(block => hljs.highlightElement(block));
+    }
+  </script>
+</body>
+</html>
