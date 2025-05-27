@@ -13,11 +13,11 @@
 -->
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>Markdown Viewer</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github-dark.min.css">
-  <style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>Markdown Viewer</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github-dark.min.css">
+    <style>
     /* Grundlayout */
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -71,23 +71,24 @@
       overflow: auto;
       border-radius: 4px;
     }
-  </style>
+
+    </style>
 </head>
 <body>
-  <!-- Copy-Paste-Funktion -->
-  <textarea id="paste" placeholder="Oder hier Markdown einfügen..."></textarea>
+<!-- Copy-Paste-Funktion -->
+<textarea id="paste" placeholder="Oder hier Markdown einfügen..."></textarea>
 
-  <!-- Datei-Import -->
-  <div id="drop">Ziehe hier eine .md-Datei hinein oder klicke zum Auswählen</div>
-  <input type="file" id="file" accept=".md" style="display:none">
+<!-- Datei-Import -->
+<div id="drop">Ziehe hier eine .md-Datei hinein oder klicke zum Auswählen</div>
+<input type="file" id="file" accept="*/*" style="display:none">
 
-  <!-- Gerenderter Inhalt -->
-  <article id="content"></article>
+<!-- Gerenderter Inhalt -->
+<article id="content"></article>
 
-  <!-- Libraries -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
-  <script>
+<!-- Libraries -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+<script>
     const paste = document.getElementById('paste'),
           drop  = document.getElementById('drop'),
           file  = document.getElementById('file'),
@@ -104,19 +105,37 @@
     paste.addEventListener('input', () => render(paste.value));
 
     function loadFile(f) {
-      if (!f || !f.name.endsWith('.md')) return;
+      if (!f) return;
+      const ext = f.name.split('.').pop().toLowerCase();
       const reader = new FileReader();
       reader.onload = () => {
-        paste.value = reader.result;
-        render(reader.result);
-      };
-      reader.readAsText(f);
+      const txt = reader.result;
+    if (ext === 'md') {
+      // wie bisher Markdown parsen
+      paste.value = txt;
+      render(txt);
+    } else {
+      // alle anderen Dateien als Code‐Block darstellen
+      content.innerHTML = 
+        `<pre><code class="language-${ext}">${escapeHtml(txt)}</code></pre>`;
+      content.querySelectorAll('pre code')
+             .forEach(b => hljs.highlightElement(b));
     }
+  };
+  reader.readAsText(f);
+}
+
+    function escapeHtml(s) {
+      return s.replace(/&/g,'&amp;')
+              .replace(/</g,'&lt;')
+              .replace(/>/g,'&gt;');
+}
 
     function render(md) {
       content.innerHTML = marked.parse(md);
       content.querySelectorAll('pre code').forEach(block => hljs.highlightElement(block));
     }
-  </script>
+
+</script>
 </body>
 </html>

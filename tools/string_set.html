@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Textverwaltung</title>
-  <style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Textverwaltung</title>
+    <style>
     * { box-sizing: border-box; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 1rem; background: #f5f5f5; color: #333; }
     .container { max-width: 800px; margin: auto; background: #fff; padding: 1rem; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
@@ -26,94 +26,95 @@
     #cancel-btn { background: #6c757d; }
     .form-row input[type="text"], .form-row textarea, .form-row select { width: 100%; padding: .5rem; border: 1px solid #ccc; border-radius: 4px; margin-top: .25rem; }
     .actions { display: flex; gap: .5rem; margin-top: 1rem; }
-  </style>
+
+    </style>
 </head>
 <body>
-  <div class="container">
+<div class="container">
     <h1>Textverwaltung</h1>
-    
+
     <div class="section" id="themes-section">
-      <h2>Themen</h2>
-      <div class="items" id="themes"></div>
+        <h2>Themen</h2>
+        <div class="items" id="themes"></div>
     </div>
-    
+
     <div class="section" id="categories-section" style="display:none;">
-      <h2>Kategorien</h2>
-      <div class="items" id="categories"></div>
+        <h2>Kategorien</h2>
+        <div class="items" id="categories"></div>
     </div>
-    
+
     <div class="section" id="subcategories-section" style="display:none;">
-      <h2>Unterkategorien</h2>
-      <div class="items" id="subcategories">
-        <label><input type="checkbox" value="alle" checked> alle</label>
-      </div>
+        <h2>Unterkategorien</h2>
+        <div class="items" id="subcategories">
+            <label><input type="checkbox" value="alle" checked> alle</label>
+        </div>
     </div>
-    
+
     <div id="texts" class="section"></div>
-    
+
     <div class="actions">
-      <button id="bulk-copy">Ausgewählte kopieren</button>
-      <button id="new-btn">Neu</button>
+        <button id="bulk-copy">Ausgewählte kopieren</button>
+        <button id="new-btn">Neu</button>
     </div>
 
     <div id="add-form">
-      <div class="form-row" id="add-options">
-        <label><input type="checkbox" value="theme"> Thema</label>
-        <label><input type="checkbox" value="category"> Kategorie</label>
-        <label><input type="checkbox" value="subcategory"> Unterkategorie</label>
-        <label><input type="checkbox" value="text"> Text</label>
-      </div>
-      
-      <div class="form-row" id="input-theme" style="display:none;">
-        <label>Neues Thema:
-          <input type="text" id="new-theme">
-        </label>
-      </div>
-      
-      <div class="form-row" id="input-category" style="display:none;">
-        <label>Thema:
-          <select id="new-cat-theme"></select>
-        </label>
-        <label>Neue Kategorie:
-          <input type="text" id="new-category">
-        </label>
-      </div>
-      
-      <div class="form-row" id="input-subcategory" style="display:none;">
-        <label>Thema:
-          <select id="new-subcat-theme"></select>
-        </label>
-        <label>Kategorie:
-          <select id="new-subcat-cat"></select>
-        </label>
-        <label>Neue Unterkategorie:
-          <input type="text" id="new-subcategory">
-        </label>
-      </div>
-      
-      <div class="form-row" id="input-text" style="display:none;">
-        <label>Thema:
-          <select id="new-text-theme"></select>
-        </label>
-        <label>Kategorie:
-          <select id="new-text-cat"></select>
-        </label>
-        <label>Unterkategorie:
-          <select id="new-text-subcat"></select>
-        </label>
-        <label>Neuer Text:
-          <textarea id="new-text" rows="4"></textarea>
-        </label>
-      </div>
-      
-      <div class="actions">
-        <button id="save-btn">Speichern</button>
-        <button id="cancel-btn">Abbrechen</button>
-      </div>
-    </div>
-  </div>
+        <div class="form-row" id="add-options">
+            <label><input type="checkbox" value="theme"> Thema</label>
+            <label><input type="checkbox" value="category"> Kategorie</label>
+            <label><input type="checkbox" value="subcategory"> Unterkategorie</label>
+            <label><input type="checkbox" value="text"> Text</label>
+        </div>
 
-  <script>
+        <div class="form-row" id="input-theme" style="display:none;">
+            <label>Neues Thema:
+                <input type="text" id="new-theme">
+            </label>
+        </div>
+
+        <div class="form-row" id="input-category" style="display:none;">
+            <label>Thema:
+                <select id="new-cat-theme"></select>
+            </label>
+            <label>Neue Kategorie:
+                <input type="text" id="new-category">
+            </label>
+        </div>
+
+        <div class="form-row" id="input-subcategory" style="display:none;">
+            <label>Thema:
+                <select id="new-subcat-theme"></select>
+            </label>
+            <label>Kategorie:
+                <select id="new-subcat-cat"></select>
+            </label>
+            <label>Neue Unterkategorie:
+                <input type="text" id="new-subcategory">
+            </label>
+        </div>
+
+        <div class="form-row" id="input-text" style="display:none;">
+            <label>Thema:
+                <select id="new-text-theme"></select>
+            </label>
+            <label>Kategorie:
+                <select id="new-text-cat"></select>
+            </label>
+            <label>Unterkategorie:
+                <select id="new-text-subcat"></select>
+            </label>
+            <label>Neuer Text:
+                <textarea id="new-text" rows="4"></textarea>
+            </label>
+        </div>
+
+        <div class="actions">
+            <button id="save-btn">Speichern</button>
+            <button id="cancel-btn">Abbrechen</button>
+        </div>
+    </div>
+</div>
+
+<script>
   (function(){
     // Konstanten und Daten-Funktionen
     const dataKey = 'textData';
@@ -454,6 +455,7 @@
     // Anwendung starten
     renderThemes();
   })();
-  </script>
+
+</script>
 </body>
 </html>
