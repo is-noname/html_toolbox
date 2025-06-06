@@ -1,461 +1,106 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Textverwaltung</title>
-    <style>
-    * { box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 1rem; background: #f5f5f5; color: #333; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Textanzeige aus JSON</title>
+  <style>
+    body { font-family: sans-serif; padding: 1rem; background: #f5f5f5; color: #333; }
     .container { max-width: 800px; margin: auto; background: #fff; padding: 1rem; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
     .section { margin-bottom: 1rem; }
-    .section h2 { margin-bottom: .5rem; }
-    .items { display: flex; flex-wrap: wrap; gap: .5rem; }
-    .items label { display: flex; align-items: center; gap: .25rem; background: #e9ecef; padding: .5rem; border-radius: 4px; cursor: pointer; }
-    .items input { margin: 0; }
-    .text-item { display: flex; align-items: center; margin-bottom: .5rem; }
-    .text-item textarea { flex: 1; height: 3rem; margin-right: .5rem; resize: vertical; }
-    .text-item button { margin-right: .5rem; }
-    button { padding: .5rem 1rem; border: none; border-radius: 4px; cursor: pointer; background: #12d3a3; color: #fff; }
-    button:hover { background: #4b4b4b; }
-    #bulk-copy { margin-top: 1rem; }
-    #new-btn { margin-left: .5rem; background: #12d3a3; }
-    #add-form { display: none; background: #e9ecef; padding: 1rem; border-radius: 4px; margin-top: 1rem; }
-    #add-form .form-row { margin-bottom: .5rem; }
-    #add-options label { margin-right: 1rem; }
-    #cancel-btn { background: #6c757d; }
-    .form-row input[type="text"], .form-row textarea, .form-row select { width: 100%; padding: .5rem; border: 1px solid #ccc; border-radius: 4px; margin-top: .25rem; }
-    .actions { display: flex; gap: .5rem; margin-top: 1rem; }
-
-    </style>
+    .items label { display: inline-flex; align-items: center; gap: .25rem; margin-right: .5rem; background: #e9ecef; padding: .25rem .5rem; border-radius: 4px; cursor: pointer; }
+    .text-item { display: flex; align-items: center; margin: .5rem 0; }
+    .text-item textarea { flex: 1; resize: vertical; margin-right: .5rem; height: 3rem; }
+    .text-item button { white-space: nowrap; }
+    button { padding: .5rem 1rem; border: none; border-radius: 4px; background: #12d3a3; color: #fff; cursor: pointer; }
+    button:hover { background: #0fa589; }
+  </style>
 </head>
 <body>
-<div class="container">
-    <h1>Textverwaltung</h1>
+  <div class="container">
+    <h1>Textverwaltung (externe JSON)</h1>
 
-    <div class="section" id="themes-section">
-        <h2>Themen</h2>
-        <div class="items" id="themes"></div>
-    </div>
+    <div class="section" id="themes"></div>
+    <div class="section" id="categories"></div>
+    <div class="section" id="subcategories"></div>
+    <div class="section" id="texts"></div>
+  </div>
 
-    <div class="section" id="categories-section" style="display:none;">
-        <h2>Kategorien</h2>
-        <div class="items" id="categories"></div>
-    </div>
+  <script>
+    let data = {};
 
-    <div class="section" id="subcategories-section" style="display:none;">
-        <h2>Unterkategorien</h2>
-        <div class="items" id="subcategories">
-            <label><input type="checkbox" value="alle" checked> alle</label>
-        </div>
-    </div>
-
-    <div id="texts" class="section"></div>
-
-    <div class="actions">
-        <button id="bulk-copy">Ausgewählte kopieren</button>
-        <button id="new-btn">Neu</button>
-    </div>
-
-    <div id="add-form">
-        <div class="form-row" id="add-options">
-            <label><input type="checkbox" value="theme"> Thema</label>
-            <label><input type="checkbox" value="category"> Kategorie</label>
-            <label><input type="checkbox" value="subcategory"> Unterkategorie</label>
-            <label><input type="checkbox" value="text"> Text</label>
-        </div>
-
-        <div class="form-row" id="input-theme" style="display:none;">
-            <label>Neues Thema:
-                <input type="text" id="new-theme">
-            </label>
-        </div>
-
-        <div class="form-row" id="input-category" style="display:none;">
-            <label>Thema:
-                <select id="new-cat-theme"></select>
-            </label>
-            <label>Neue Kategorie:
-                <input type="text" id="new-category">
-            </label>
-        </div>
-
-        <div class="form-row" id="input-subcategory" style="display:none;">
-            <label>Thema:
-                <select id="new-subcat-theme"></select>
-            </label>
-            <label>Kategorie:
-                <select id="new-subcat-cat"></select>
-            </label>
-            <label>Neue Unterkategorie:
-                <input type="text" id="new-subcategory">
-            </label>
-        </div>
-
-        <div class="form-row" id="input-text" style="display:none;">
-            <label>Thema:
-                <select id="new-text-theme"></select>
-            </label>
-            <label>Kategorie:
-                <select id="new-text-cat"></select>
-            </label>
-            <label>Unterkategorie:
-                <select id="new-text-subcat"></select>
-            </label>
-            <label>Neuer Text:
-                <textarea id="new-text" rows="4"></textarea>
-            </label>
-        </div>
-
-        <div class="actions">
-            <button id="save-btn">Speichern</button>
-            <button id="cancel-btn">Abbrechen</button>
-        </div>
-    </div>
-</div>
-
-<script>
-  (function(){
-    // Konstanten und Daten-Funktionen
-    const dataKey = 'textData';
-    
-    function loadData() {
-      const d = localStorage.getItem(dataKey);
-      if(d) return JSON.parse(d);
-      // Fallback-Daten für leere Datenbank
-      const def = { 
-        'Devin': { 
-          'Config': { 
-            'Headlines': ['#General configuration', '# --configuration ',]
-          } 
-        } 
-      };
-      localStorage.setItem(dataKey, JSON.stringify(def));
-      return def;
+    async function loadData() {
+      try {
+        const res = await fetch('./utils/string_set_config.json');
+        data = await res.json();
+        renderThemes();
+      } catch (e) {
+        document.body.innerHTML = '<p style="color:red">Fehler beim Laden der JSON-Datei.</p>';
+      }
     }
-    
-    function saveData() { 
-      localStorage.setItem(dataKey, JSON.stringify(data)); 
-    }
-    
-    let data = loadData();
 
-    // DOM-Elemente
-    const themesDiv = document.getElementById('themes');
-    const categoriesDiv = document.getElementById('categories');
-    const subcatsDiv = document.getElementById('subcategories');
-    const textsDiv = document.getElementById('texts');
-    const bulkCopyBtn = document.getElementById('bulk-copy');
-    const newBtn = document.getElementById('new-btn');
-    const addForm = document.getElementById('add-form');
-    const addOpts = document.querySelectorAll('#add-options input[type="checkbox"]');
-
-    // Rendering-Funktionen
     function renderThemes() {
-      themesDiv.innerHTML = '';
+      const div = document.getElementById('themes');
+      div.innerHTML = '<h2>Themen</h2>';
       Object.keys(data).forEach(theme => {
-        const lbl = document.createElement('label');
-        lbl.innerHTML = `<input type="checkbox" value="${theme}"> ${theme}`;
-        themesDiv.appendChild(lbl);
+        const label = document.createElement('label');
+        label.innerHTML = `<input type="radio" name="theme" value="${theme}"> ${theme}`;
+        label.querySelector('input').addEventListener('change', () => renderCategories(theme));
+        div.appendChild(label);
       });
-      
-      document.getElementById('categories-section').style.display = 'none';
-      document.getElementById('subcategories-section').style.display = 'none';
-      textsDiv.innerHTML = '';
-      attachEvent(themesDiv, renderCategories);
     }
-    
-    function renderCategories() {
-      const selThemes = [...themesDiv.querySelectorAll('input:checked')].map(i => i.value);
-      categoriesDiv.innerHTML = '';
-      
-      if(selThemes.length) {
-        selThemes.forEach(t => {
-          Object.keys(data[t]).forEach(cat => {
-            const lbl = document.createElement('label');
-            lbl.innerHTML = `<input type="checkbox" data-theme="${t}" value="${cat}"> ${cat}`;
-            categoriesDiv.appendChild(lbl);
-          });
-        });
-        document.getElementById('categories-section').style.display = 'block';
-      } else {
-        document.getElementById('categories-section').style.display = 'none';
-        document.getElementById('subcategories-section').style.display = 'none';
-      }
-      
-      textsDiv.innerHTML = '';
-      attachEvent(categoriesDiv, renderSubcategories);
-    }
-    
-    function renderSubcategories() {
-      const selCats = [...categoriesDiv.querySelectorAll('input:checked')].map(i => ({
-        theme: i.dataset.theme,
-        cat: i.value
-      }));
-      
-      subcatsDiv.innerHTML = '';
-      const allChk = document.createElement('label');
-      allChk.innerHTML = `<input type="checkbox" value="alle" checked> alle`;
-      subcatsDiv.appendChild(allChk);
-      
-      selCats.forEach(({theme, cat}) => {
-        Object.keys(data[theme][cat]).forEach(sub => {
-          const lbl = document.createElement('label');
-          lbl.innerHTML = `<input type="checkbox" data-theme="${theme}" data-cat="${cat}" value="${sub}"> ${sub}`;
-          subcatsDiv.appendChild(lbl);
-        });
+
+    function renderCategories(theme) {
+      const div = document.getElementById('categories');
+      div.innerHTML = '<h2>Kategorien</h2>';
+      Object.keys(data[theme]).forEach(cat => {
+        const label = document.createElement('label');
+        label.innerHTML = `<input type="radio" name="cat" value="${cat}"> ${cat}`;
+        label.querySelector('input').addEventListener('change', () => renderSubcategories(theme, cat));
+        div.appendChild(label);
       });
-      
-      document.getElementById('subcategories-section').style.display = selCats.length ? 'block' : 'none';
-      textsDiv.innerHTML = '';
-      attachEvent(subcatsDiv, renderTexts);
+      document.getElementById('subcategories').innerHTML = '';
+      document.getElementById('texts').innerHTML = '';
     }
-    
-    function renderTexts() {
-      textsDiv.innerHTML = '';
-      const sel = [...subcatsDiv.querySelectorAll('input:checked')].map(i => i.value);
-      const useAll = sel.includes('alle');
-      
-      // Alle anderen deaktivieren, wenn "alle" ausgewählt ist
-      [...subcatsDiv.querySelectorAll('input:not([value="alle"])')].forEach(i => {
-        i.disabled = useAll;
+
+    function renderSubcategories(theme, cat) {
+      const div = document.getElementById('subcategories');
+      div.innerHTML = '<h2>Unterkategorien</h2>';
+      Object.keys(data[theme][cat]).forEach(sub => {
+        const label = document.createElement('label');
+        label.innerHTML = `<input type="radio" name="sub" value="${sub}"> ${sub}`;
+        label.querySelector('input').addEventListener('change', () => renderTexts(theme, cat, sub));
+        div.appendChild(label);
       });
-      
-      const items = [];
-      
-      if(useAll) {
-        [...categoriesDiv.querySelectorAll('input:checked')].forEach(catI => {
-          const t = catI.dataset.theme, c = catI.value;
-          Object.entries(data[t][c]).forEach(([sub, texts]) => {
-            texts.forEach(txt => items.push({theme: t, cat: c, sub: sub, text: txt}));
-          });
-        });
-      } else {
-        [...subcatsDiv.querySelectorAll('input:checked:not([value="alle"])')].forEach(i => {
-          const t = i.dataset.theme, c = i.dataset.cat, s = i.value;
-          data[t][c][s].forEach(txt => items.push({theme: t, cat: c, sub: s, text: txt}));
-        });
-      }
-      
-      if (items.length > 0) {
-        // Überschrift hinzufügen
-        const header = document.createElement('h2');
-        header.textContent = 'Texte';
-        textsDiv.appendChild(header);
-      }
-      
-      items.forEach((item, idx) => {
-        const div = document.createElement('div');
-        div.className = 'text-item';
-        
-        const chk = document.createElement('input');
-        chk.type = 'checkbox';
-        chk.dataset.idx = idx;
-        
+      document.getElementById('texts').innerHTML = '';
+    }
+
+    function renderTexts(theme, cat, sub) {
+      const div = document.getElementById('texts');
+      div.innerHTML = '<h2>Texte</h2>';
+      data[theme][cat][sub].forEach(text => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'text-item';
+
         const ta = document.createElement('textarea');
-        ta.value = item.text;
         ta.readOnly = true;
-        
-        const info = document.createElement('span');
-        info.textContent = `${item.theme} › ${item.cat} › ${item.sub}`;
-        info.style.fontSize = '0.8em';
-        info.style.color = '#666';
-        info.style.marginBottom = '3px';
-        info.style.display = 'block';
-        
+        ta.value = text;
+
         const btn = document.createElement('button');
         btn.textContent = 'Kopieren';
         btn.onclick = () => {
-          navigator.clipboard.writeText(item.text);
+          navigator.clipboard.writeText(text);
           btn.textContent = '✓';
-          setTimeout(() => { btn.textContent = 'Kopieren'; }, 1000);
+          setTimeout(() => btn.textContent = 'Kopieren', 1000);
         };
-        
-        const wrapper = document.createElement('div');
-        wrapper.style.display = 'flex';
-        wrapper.style.flexDirection = 'column';
-        wrapper.style.flex = '1';
-        wrapper.appendChild(info);
+
         wrapper.appendChild(ta);
-        
-        div.appendChild(chk);
+        wrapper.appendChild(btn);
         div.appendChild(wrapper);
-        div.appendChild(btn);
-        
-        textsDiv.appendChild(div);
       });
     }
 
-    // Hilfsfunktionen
-    function bulkCopy() {
-      const checks = textsDiv.querySelectorAll('input[type="checkbox"]:checked');
-      const texts = [];
-      
-      checks.forEach(chk => {
-        const textArea = chk.closest('.text-item').querySelector('textarea');
-        texts.push(textArea.value);
-      });
-      
-      if(texts.length) {
-        navigator.clipboard.writeText(texts.join('\n\n'));
-        bulkCopyBtn.textContent = 'Kopiert!';
-        setTimeout(() => { bulkCopyBtn.textContent = 'Ausgewählte kopieren'; }, 1000);
-      }
-    }
-    
-    function attachEvent(parent, fn) {
-      parent.querySelectorAll('input[type="checkbox"]').forEach(i => i.onchange = fn);
-    }
-    
-    // Neuen Eintrag hinzufügen
-    function showAdd() {
-      addForm.style.display = 'block';
-      addOpts.forEach(o => o.checked = false);
-      updateAdd();
-      fillAdd();
-    }
-    
-    function hideAdd() {
-      addForm.style.display = 'none';
-    }
-    
-    function updateAdd() {
-      ['theme', 'category', 'subcategory', 'text'].forEach(type => {
-        document.getElementById('input-' + type).style.display = 
-          document.querySelector(`#add-options input[value="${type}"]`).checked ? 'block' : 'none';
-      });
-    }
-    
-    function fillAdd() {
-      // Theme-Selects befüllen
-      ['new-cat-theme', 'new-subcat-theme', 'new-text-theme'].forEach(id => {
-        const sel = document.getElementById(id);
-        sel.innerHTML = '';
-        Object.keys(data).forEach(t => sel.add(new Option(t, t)));
-      });
-      
-      // Subcat-Theme Change-Event
-      document.getElementById('new-subcat-theme').onchange = () => {
-        const theme = document.getElementById('new-subcat-theme').value;
-        const sel = document.getElementById('new-subcat-cat');
-        sel.innerHTML = '';
-        
-        if (theme && data[theme]) {
-          Object.keys(data[theme]).forEach(c => sel.add(new Option(c, c)));
-        }
-      };
-      
-      // Text-Theme Change-Event
-      document.getElementById('new-text-theme').onchange = () => {
-        const theme = document.getElementById('new-text-theme').value;
-        const selC = document.getElementById('new-text-cat');
-        selC.innerHTML = '';
-        
-        if (theme && data[theme]) {
-          Object.keys(data[theme]).forEach(c => selC.add(new Option(c, c)));
-          selC.onchange();
-        }
-      };
-      
-      // Text-Cat Change-Event
-      document.getElementById('new-text-cat').onchange = () => {
-        const th = document.getElementById('new-text-theme').value;
-        const ct = document.getElementById('new-text-cat').value;
-        const sel = document.getElementById('new-text-subcat');
-        sel.innerHTML = '';
-        
-        if (th && ct && data[th] && data[th][ct]) {
-          Object.keys(data[th][ct]).forEach(s => sel.add(new Option(s, s)));
-        }
-      };
-      
-      // Kaskade initialisieren
-      document.getElementById('new-subcat-theme').onchange();
-      document.getElementById('new-text-theme').onchange();
-    }
-    
-    function saveAdd() {
-      let needsSave = false;
-      
-      if (document.querySelector('#add-options input[value="theme"]').checked) {
-        const t = document.getElementById('new-theme').value.trim();
-        if (t) {
-          data[t] = data[t] || {};
-          needsSave = true;
-        }
-      }
-      
-      if (document.querySelector('#add-options input[value="category"]').checked) {
-        const t = document.getElementById('new-cat-theme').value;
-        const c = document.getElementById('new-category').value.trim();
-        if (t && c) {
-          data[t] = data[t] || {};
-          data[t][c] = data[t][c] || {};
-          needsSave = true;
-        }
-      }
-      
-      if (document.querySelector('#add-options input[value="subcategory"]').checked) {
-        const t = document.getElementById('new-subcat-theme').value;
-        const c = document.getElementById('new-subcat-cat').value;
-        const s = document.getElementById('new-subcategory').value.trim();
-        if (t && c && s) {
-          data[t] = data[t] || {};
-          data[t][c] = data[t][c] || {};
-          data[t][c][s] = data[t][c][s] || [];
-          needsSave = true;
-        }
-      }
-      
-      if (document.querySelector('#add-options input[value="text"]').checked) {
-        const t = document.getElementById('new-text-theme').value;
-        const c = document.getElementById('new-text-cat').value;
-        const s = document.getElementById('new-text-subcat').value;
-        const txt = document.getElementById('new-text').value.trim();
-        if (t && c && s && txt) {
-          data[t] = data[t] || {};
-          data[t][c] = data[t][c] || {};
-          data[t][c][s] = data[t][c][s] || [];
-          data[t][c][s].push(txt);
-          needsSave = true;
-        }
-      }
-      
-      if (needsSave) {
-        saveData();
-        hideAdd();
-        renderThemes();
-        
-        // Optional: HTML-Export für die Sicherung
-        saveHtmlBackup();
-      } else {
-        alert('Bitte fülle alle erforderlichen Felder aus.');
-      }
-    }
-    
-    function saveHtmlBackup() {
-      const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
-      const blob = new Blob([html], {type: 'text/html'});
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'textverwaltung.html';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(a.href);
-    }
-
-    // Event-Listener hinzufügen
-    bulkCopyBtn.onclick = bulkCopy;
-    newBtn.onclick = showAdd;
-    addOpts.forEach(o => o.onchange = updateAdd);
-    document.getElementById('save-btn').onclick = saveAdd;
-    document.getElementById('cancel-btn').onclick = hideAdd;
-    
-    // Anwendung starten
-    renderThemes();
-  })();
-
-</script>
+    loadData();
+  </script>
 </body>
 </html>
