@@ -26,7 +26,8 @@
         "<script>console.log('Init Frontend')</script>",
         "<style>body { background: #fff; }</style>"
       ]
-    },
+    }
+  },
   "AI": {
     "Prompts": {
       "Prompts Devin": [
@@ -54,6 +55,5 @@
         "<style>body { background: #fff; }</style>"
       ]
     }
-  }
   }
 }
