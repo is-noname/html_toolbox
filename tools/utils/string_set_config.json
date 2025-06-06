@@ -1,0 +1,22 @@
+{
+  "Devin": {
+    "Config": {
+      "Headlines": [
+        "# -- General configuration ---------------------------------------------------",
+        "# -- ------- configuration ---------------------------------------------------"
+      ]
+    },
+    "Backend": {
+      "Endpoints": [
+        "/api/devin/status",
+        "/api/devin/init"
+      ]
+    },
+    "Frontend": {
+      "Snippets": [
+        "<script>console.log('Init Frontend')</script>",
+        "<style>body { background: #fff; }</style>"
+      ]
+    }
+  }
+}
