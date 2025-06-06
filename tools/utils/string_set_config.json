@@ -3,7 +3,16 @@
     "Config": {
       "Headlines": [
         "# -- General configuration ---------------------------------------------------",
-        "# -- ------- configuration ---------------------------------------------------"
+        "# -- ------- configuration ---------------------------------------------------",
+        "# -- ------- variables ---------------------------------------------------",
+        "# -- ------- functions ---------------------------------------------------",
+        "# -- ------- classes ---------------------------------------------------",
+        "# -- ------- interfaces ---------------------------------------------------",
+        "# -- ------- enums ---------------------------------------------------",
+        "# -- ------- types ---------------------------------------------------",
+        "# -- ------- constants ---------------------------------------------------",
+        "# -- ------- tests ---------------------------------------------------",
+        "# -- ------- documentation ---------------------------------------------------"
       ]
     },
     "Backend": {
@@ -17,6 +26,34 @@
         "<script>console.log('Init Frontend')</script>",
         "<style>body { background: #fff; }</style>"
       ]
+    },
+  "AI": {
+    "Prompts": {
+      "Prompts Devin": [
+        "You are a helpful assistant that can answer questions and help with tasks.",
+        "You are a helpful assistant that can answer questions and help with tasks."
+      ],
+      "Prompts Documentation": [
+        "You are a helpful assistant that can answer questions and help with tasks.",
+        "You are a helpful assistant that can answer questions and help with tasks."
+      ],
+      "Prompts Research": [
+        "You are a helpful assistant that can answer questions and help with tasks.",
+        "You are a helpful assistant that can answer questions and help with tasks."
+      ]
+    },
+    "öhm": {
+      "kp": [
+        "offen",
+        "geschlossen"
+      ]
+    },
+    "hier": {
+      "Snippets": [
+        "<script>console.log('Init Frontend')</script>",
+        "<style>body { background: #fff; }</style>"
+      ]
     }
+  }
   }
 }
