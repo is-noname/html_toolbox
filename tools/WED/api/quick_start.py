@@ -101,8 +101,8 @@ def test_full_updater():
             print("✅ Data-Updater funktioniert!")
             
             # Prüfen ob economic_data.json erstellt wurde
-            if os.path.exists('economic_data.json'):
-                with open('economic_data.json', 'r') as f:
+            if os.path.exists('../api/economic_data.json'):
+                with open('../api/economic_data.json', 'r') as f:
                     data = json.load(f)
                 
                 unemployment = data.get('datasets', {}).get('unemployment', {})
@@ -126,12 +126,12 @@ def test_full_updater():
 
 def verify_output():
     """Prüft die generierte economic_data.json"""
-    if not os.path.exists('economic_data.json'):
+    if not os.path.exists('../api/economic_data.json'):
         print("❌ economic_data.json wurde nicht erstellt")
         return False
     
     try:
-        with open('economic_data.json', 'r') as f:
+        with open('../api/economic_data.json', 'r') as f:
             data = json.load(f)
         
         print("📊 Output-Validierung:")
