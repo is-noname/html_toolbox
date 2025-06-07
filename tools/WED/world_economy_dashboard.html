@@ -682,7 +682,7 @@
         async function updateDashboardWithRealData() {
             try {
                 // JSON-Daten laden
-                const response = await fetch('economic_data.json');
+                const response = await fetch('../api/economic_data.json');
                 const data = await response.json();
 
                 // Dashboard-Update-Timestamp setzen

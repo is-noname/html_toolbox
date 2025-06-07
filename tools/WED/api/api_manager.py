@@ -118,7 +118,7 @@ class APIManager:
             start_time = time.time()
             
             # API-Aufruf mit dem spezifischen Modul
-            result = source_module.fetch_dataset(dataset_id, api_key, params)
+            result = source_module.fetch_dataset(dataset_id, params)
             
             # Rate-Limit aktualisieren
             self.rate_limits[source_name]['last_call'] = start_time
