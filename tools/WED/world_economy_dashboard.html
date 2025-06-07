@@ -678,6 +678,56 @@
                 }
             }
         });
+        // Script zum Laden der JSON-Daten und Aktualisieren des Dashboards
+        async function updateDashboardWithRealData() {
+            try {
+                // JSON-Daten laden
+                const response = await fetch('economic_data.json');
+                const data = await response.json();
+
+                // Dashboard-Update-Timestamp setzen
+                document.querySelector('.date-update').textContent = `Letzte Aktualisierung: ${data.meta.last_updated}`;
+
+                // Charts aktualisieren (beispielhaft der Leitzins-Chart)
+                updateInterestRateChart(data);
+
+                console.log("Dashboard erfolgreich aktualisiert!");
+            } catch (error) {
+                console.error("Fehler beim Aktualisieren des Dashboards:", error);
+            }
+        }
+
+        // Aktualisiere den Leitzinsen-Chart als Beispiel
+        function updateInterestRateChart(data) {
+            // Fed-Daten
+            const fedData = data.datasets.interest_rate_fed.data.historical;
+            // Nur Jahres-Quartale verwenden für bessere Lesbarkeit
+            const fedDates = fedData.filter(d => d.date.endsWith('-01-01') ||
+                                                d.date.endsWith('-04-01') ||
+                                                d.date.endsWith('-07-01') ||
+                                                d.date.endsWith('-10-01'))
+                                   .map(d => d.date.substring(0, 7)); // Format: "2023-01"
+
+            const fedValues = fedData.filter(d => d.date.endsWith('-01-01') ||
+                                                d.date.endsWith('-04-01') ||
+                                                d.date.endsWith('-07-01') ||
+                                                d.date.endsWith('-10-01'))
+                                     .map(d => d.value);
+
+            // Chart aktualisieren
+            interestRateChart.data.labels = fedDates;
+            interestRateChart.data.datasets[0].data = fedValues;
+
+            // Aktuellen Wert anzeigen
+            document.querySelector('#interestRateChart').closest('.card').querySelector('.metric-value').textContent =
+                `${data.datasets.interest_rate_fed.data.latest.value}%`;
+
+            // Chart neu zeichnen
+            interestRateChart.update();
+        }
+
+        // Dashboard beim Laden aktualisieren
+        document.addEventListener('DOMContentLoaded', updateDashboardWithRealData);
     </script>
 </body>
 </html>

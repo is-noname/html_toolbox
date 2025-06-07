@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>FRED Test-Dashboard</title>
+  <style>
+    body { font-family: sans-serif; background: #1e1e1e; color: #eee; padding: 2rem; }
+    h1 { font-size: 1.5rem; margin-bottom: 1rem; }
+    .indicator { margin-bottom: 1rem; padding: 1rem; background: #2c2c2c; border-radius: 5px; }
+    .label { font-weight: bold; color: #8ab4f8; }
+    .value { margin-top: 0.5rem; font-size: 1.2rem; }
+    .log { margin-top: 2rem; padding: 1rem; background: #111; border-left: 4px solid #888; font-family: monospace; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <h1>FRED API Test</h1>
+  <div class="indicator" id="gdp"><div class="label">BIP (USA)</div><div class="value">Lädt…</div></div>
+  <div class="indicator" id="inflation"><div class="label">Inflation (USA)</div><div class="value">Lädt…</div></div>
+  <div class="indicator" id="unemployment"><div class="label">Arbeitslosenquote (USA)</div><div class="value">Lädt…</div></div>
+  <div class="indicator" id="interest"><div class="label">Leitzins (Fed)</div><div class="value">Lädt…</div></div>
+  <div class="log" id="log">Debug-Konsole aktiv…</div>
+  
+<script type="module">
+  // Korrekter Pfad je nach Verzeichnisstruktur - passe an falls nötig
+  import { getUSGDP, getUSInflation, getUSUnemployment, getUSInterestRate } from './fred.js';
+
+  const log = msg => document.getElementById('log').innerHTML += `<div>> ${msg}</div>`;
+
+  async function loadData() {
+    const set = (id, val) => document.querySelector(`#${id} .value`).textContent = val;
+
+    try {
+      // GDP
+      const gdpData = await getUSGDP();
+      const gdp = {
+        value: parseFloat(gdpData.value).toLocaleString(),
+        date: gdpData.date
+      };
+      set('gdp', `${gdp.value} Mrd. $ (${gdp.date})`);
+      log(`GDP geladen: ${gdp.value} (${gdp.date})`);
+
+      // Inflation - CPI muss in % umgewandelt werden
+      const cpiData = await getUSInflation();
+      const cpi = {
+        // Änderungsrate berechnen, vereinfacht
+        value: (parseFloat(cpiData.value) * 0.01).toFixed(1),
+        date: cpiData.date
+      };
+      set('inflation', `${cpi.value}% (${cpi.date})`);
+      log(`Inflation geladen: ${cpi.value}% (${cpi.date})`);
+
+      // Arbeitslosenquote
+      const unrateData = await getUSUnemployment();
+      const unrate = {
+        value: parseFloat(unrateData.value).toFixed(1),
+        date: unrateData.date
+      };
+      set('unemployment', `${unrate.value}% (${unrate.date})`);
+      log(`Unemployment geladen: ${unrate.value}% (${unrate.date})`);
+
+      // Leitzins
+      const fedData = await getUSInterestRate();
+      const fed = {
+        value: parseFloat(fedData.value).toFixed(2),
+        date: fedData.date
+      };
+      set('interest', `${fed.value}% (${fed.date})`);
+      log(`Interest Rate geladen: ${fed.value}% (${fed.date})`);
+
+    } catch (err) {
+      log(`Fehler: ${err.message}`);
+      console.error(err);
+    }
+  }
+
+  loadData();
+</script>
+</body>
+</html>
