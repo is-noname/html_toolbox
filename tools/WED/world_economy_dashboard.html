@@ -827,31 +827,45 @@
 
         // Inflations-Chart aktualisieren
         function updateInflationChart(dataset) {
-            // Historische Daten filtern (z.B. nur Jahresdaten)
             const inflationData = dataset.data.historical;
-            
-            // Nur jährliche Daten auswählen (Anfang des Jahres)
+
+            // Wähle nur Januar-Daten für Jahresvergleiche
             const yearlyData = inflationData.filter(d => d.date.endsWith('-01-01'))
-                                            .reverse() // Älteste zuerst
-                                            .slice(-5); // Nur die letzten 5 Jahre
-            
-            // Daten für den Chart vorbereiten
-            const dates = yearlyData.map(d => d.date.substring(0, 4)); // Nur das Jahr
-            const values = yearlyData.map(d => d.value);
-            
-            // Chart aktualisieren
-            inflationChart.data.labels = dates;
-            inflationChart.data.datasets[0].data = values;
-            
-            // Aktuellen Wert anzeigen
-            const latestValue = dataset.data.latest.value;
-            document.querySelector('#inflationChart').closest('.card')
-                    .querySelector('.metric-value').textContent = `${latestValue.toFixed(1)}%`;
-            
-            // Chart neu zeichnen
+                                           .reverse();
+
+            // Berechne jährliche Inflationsraten
+            const inflationRates = [];
+            const years = [];
+
+            for (let i = 1; i < yearlyData.length; i++) {
+                const currentCPI = yearlyData[i].value;
+                const lastYearCPI = yearlyData[i-1].value;
+                const yearlyInflation = ((currentCPI - lastYearCPI) / lastYearCPI) * 100;
+
+                inflationRates.push(yearlyInflation.toFixed(1));
+                years.push(yearlyData[i].date.substring(0, 4));
+            }
+
+            // Chart mit den berechneten Raten aktualisieren
+            inflationChart.data.labels = years;
+            inflationChart.data.datasets[0].data = inflationRates;
+
+            // Aktuelle Inflationsrate berechnen
+            const currentYearIndex = yearlyData.findIndex(d => d.date.endsWith('-01-01') &&
+                                                         d.date.startsWith('2024'));
+            const prevYearIndex = yearlyData.findIndex(d => d.date.endsWith('-01-01') &&
+                                                       d.date.startsWith('2023'));
+
+            if (currentYearIndex !== -1 && prevYearIndex !== -1) {
+                const currentInflation = ((yearlyData[currentYearIndex].value -
+                                        yearlyData[prevYearIndex].value) /
+                                        yearlyData[prevYearIndex].value) * 100;
+
+                document.querySelector('#inflationChart').closest('.card')
+                        .querySelector('.metric-value').textContent = `${currentInflation.toFixed(1)}%`;
+            }
+
             inflationChart.update();
-            
-            console.log(`Inflation-Chart aktualisiert mit ${values.length} Datenpunkten`);
         }
 
         // Arbeitslosigkeits-Chart aktualisieren

@@ -6,8 +6,22 @@ import json
 from datetime import datetime
 import os
 
+def load_api_key():
+    """Lädt den API-Key sicher aus der Konfigurationsdatei"""
+    try:
+        with open('api_config.json', 'r') as config_file:
+            config = json.load(config_file)
+            return config.get('api_keys', {}).get('fred', '')
+    except FileNotFoundError:
+        print("⚠️ Warnung: api_config.json nicht gefunden!")
+        return ""
+    except json.JSONDecodeError:
+        print("⚠️ Fehler: api_config.json enthält ungültiges JSON!")
+
+        return ""
+
 # API-Key aus der JS-Datei
-API_KEY = "bbc4b13f812a3a505523ab2a982e4a66"  # Aus deiner api_keys.js
+API_KEY = load_api_key() # Aus deiner api_config.js
 BASE_URL = "https://api.stlouisfed.org/fred/series/observations"
 
 # Die Datensätze, die wir abrufen wollen

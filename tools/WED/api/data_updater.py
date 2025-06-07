@@ -27,7 +27,7 @@ class WEDDataUpdater:
     - Behandelt Fehler und Fallbacks
     """
     
-    def __init__(self, config_file: str = "api_config.json", output_file: str = "economic_data.json"):
+    def __init__(self, config_file: str = "api_config.json", output_file: str = "api/economic_data.json"):
         self.config_file = config_file
         self.output_file = output_file
         self.config = self._load_config()
