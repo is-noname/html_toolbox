@@ -1,6 +1,6 @@
 {
   "meta": {
-    "last_updated": "07.06.2025 10:09",
+    "last_updated": "07.06.2025 22:57",
     "source": "FRED (Federal Reserve Economic Data)"
   },
   "datasets": {
@@ -513,8 +513,8 @@
       "unit": "%",
       "data": {
         "latest": {
-          "value": 4.2,
-          "date": "2025-05-01"
+          "date": "2025-05-01",
+          "value": 4.2
         },
         "historical": [
           {

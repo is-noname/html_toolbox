@@ -249,174 +249,195 @@
         .refresh-btn:hover {
             background-color: #2980b9;
         }
+
     </style>
 </head>
 <body>
-    <div class="dashboard">
-        <header>
-            <h1>Weltwirtschafts-Dashboard</h1>
-            <p>Aktuelle Trends und Indikatoren der globalen Wirtschaft</p>
-            <div class="header-controls">
-                <p class="date-update">Letzte Aktualisierung: Juni 2025</p>
-                <button id="refresh-button" class="refresh-btn">
-                    <i class="fas fa-sync"></i> Daten aktualisieren
-                </button>
+<div class="dashboard">
+    <header>
+        <h1>Weltwirtschafts-Dashboard</h1>
+        <p>Aktuelle Trends und Indikatoren der globalen Wirtschaft</p>
+        <div class="header-controls">
+            <p class="date-update">Letzte Aktualisierung: Juni 2025</p>
+            <button id="refresh-button" class="refresh-btn">
+                <i class="fas fa-sync"></i> Daten aktualisieren
+            </button>
+        </div>
+    </header>
+
+    <div class="grid">
+        <!-- BIP-Karte -->
+        <div class="card big-card">
+            <div class="card-header">
+                <div class="card-title">BIP der Top-5-Volkswirtschaften</div>
+                <div class="card-icon"><i class="fas fa-chart-line"></i></div>
             </div>
-        </header>
-        
-        <div class="grid">
-            <!-- BIP-Karte -->
-            <div class="card big-card">
-                <div class="card-header">
-                    <div class="card-title">BIP der Top-5-Volkswirtschaften</div>
-                    <div class="card-icon"><i class="fas fa-chart-line"></i></div>
-                </div>
-                <div class="chart-container">
-                    <canvas id="gdpChart"></canvas>
-                </div>
-                <div class="data-source">Quelle: Statista, 2024</div>
-                <div class="interpretation">
-                    <strong>Was bedeutet das?</strong> Die USA und China dominieren die Weltwirtschaft. 
-                    Höhere BIP-Werte bedeuten größere Wirtschaftskraft. Je ausgeglichener das Wachstum zwischen diesen Ländern ist, desto stabiler die Weltwirtschaft.
-                </div>
+            <div class="chart-container">
+                <canvas id="gdpChart"></canvas>
             </div>
-            
-            <!-- OECD CLI-Karte -->
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">OECD Composite Leading Indicator</div>
-                    <div class="card-icon"><i class="fas fa-arrow-trend-up"></i></div>
-                </div>
-                <div class="chart-container">
-                    <canvas id="cliChart"></canvas>
-                </div>
-                <div class="metric">
-                    <span class="metric-name">Aktueller CLI-Index:</span>
-                    <span class="metric-value positive">51.7</span>
-                </div>
-                <div class="metric">
-                    <span class="metric-name">Veränderung zum Vorquartal:</span>
-                    <span class="metric-value positive">+3.5</span>
-                </div>
-                <div class="data-source">Quelle: OECD, 2024</div>
-                <div class="interpretation">
-                    <strong>Was bedeutet das?</strong> Werte über 50 signalisieren Wachstum, unter 50 deuten auf Abschwung hin.
-                    Der steigende Trend (51.7) deutet auf eine leichte wirtschaftliche Erholung hin - ein positives Signal für die kommenden 6-9 Monate.
-                </div>
-            </div>
-            
-            <!-- Unternehmensumfragen-Karte -->
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">Unternehmensumfragen</div>
-                    <div class="card-icon"><i class="fas fa-building"></i></div>
-                </div>
-                <div class="chart-container">
-                    <canvas id="businessSurveyChart"></canvas>
-                </div>
-                <div class="metric">
-                    <span class="metric-name">IfW Kiel Index:</span>
-                    <span class="metric-value negative">94.7</span>
-                </div>
-                <div class="data-source">Quelle: IfW Kiel, 2024</div>
-                <div class="interpretation">
-                    <strong>Was bedeutet das?</strong> 100 ist der neutrale Wert. Darunter (wie aktuell 94.7) bedeutet pessimistische Unternehmensstimmung.
-                    IT-Dienstleister (103.4) sind optimistisch, während Maschinenbauer (89.3) stark pessimistisch sind - ein Warnsignal für die Industrie.
-                </div>
-            </div>
-            
-            <!-- Inflation-Karte -->
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">Inflationsdynamik</div>
-                    <div class="card-icon"><i class="fas fa-percent"></i></div>
-                </div>
-                <div class="chart-container">
-                    <canvas id="inflationChart"></canvas>
-                </div>
-                <div class="metric">
-                    <span class="metric-name">Globale Inflationsrate:</span>
-                    <span class="metric-value neutral">5.7%</span>
-                </div>
-                <div class="metric">
-                    <span class="metric-name">Kerninflation:</span>
-                    <span class="metric-value negative">4.3%</span>
-                </div>
-                <div class="data-source">Quelle: IWF, 2024</div>
-                <div class="interpretation">
-                    <strong>Was bedeutet das?</strong> Inflation ist rückläufig (gut), aber immer noch zu hoch (schlecht).
-                    Zielwert wäre etwa 2%. Die aktuelle Kerninflation von 4.3% ist weiterhin problematisch und zwingt Zentralbanken zu hohen Zinsen.
-                </div>
-            </div>
-            
-            <!-- Leitzinsen-Karte -->
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">Leitzinsen</div>
-                    <div class="card-icon"><i class="fas fa-money-bill-transfer"></i></div>
-                </div>
-                <div class="chart-container">
-                    <canvas id="interestRateChart"></canvas>
-                </div>
-                <div class="metric">
-                    <span class="metric-name">US Fed:</span>
-                    <span class="metric-value negative">5.25-5.5%</span>
-                </div>
-                <div class="metric">
-                    <span class="metric-name">EZB:</span>
-                    <span class="metric-value negative">4.5%</span>
-                </div>
-                <div class="data-source">Quelle: Fed, EZB, 2024</div>
-                <div class="interpretation">
-                    <strong>Was bedeutet das?</strong> Hohe Zinsen (wie aktuell) bremsen Investitionen und Kreditvergabe.
-                    Die stark gestiegenen Zinsen seit 2022 zeigen, dass Zentralbanken die Inflation bekämpfen - auf Kosten des Wirtschaftswachstums.
-                </div>
-            </div>
-            
-            <!-- Handelsströme-Karte -->
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">Internationale Handelsströme</div>
-                    <div class="card-icon"><i class="fas fa-ship"></i></div>
-                </div>
-                <div class="chart-container">
-                    <canvas id="tradeChart"></canvas>
-                </div>
-                <div class="metric">
-                    <span class="metric-name">Welthandelswachstum:</span>
-                    <span class="metric-value neutral">2.1%</span>
-                </div>
-                <div class="metric">
-                    <span class="metric-name">Baltic Dry Index:</span>
-                    <span class="metric-value negative">1,214</span>
-                </div>
-                <div class="data-source">Quelle: World Trade Monitor, 2024</div>
-                <div class="interpretation">
-                    <strong>Was bedeutet das?</strong> Das Handelswachstum von 2.1% ist schwach (Vor-Covid: 4.3%). 
-                    Der stark gefallene Baltic Dry Index (Frachtkosten) zeigt geringe Nachfrage und deutet auf wirtschaftliche Schwäche hin.
-                </div>
+            <div class="data-source">Quelle: Statista, 2024</div>
+            <div class="interpretation">
+                <strong>Was bedeutet das?</strong> Die USA und China dominieren die Weltwirtschaft.
+                Höhere BIP-Werte bedeuten größere Wirtschaftskraft. Je ausgeglichener das Wachstum zwischen diesen
+                Ländern ist, desto stabiler die Weltwirtschaft.
             </div>
         </div>
-        
-        <div class="summary">
-            <h2>Wirtschaftlicher Ausblick</h2>
-            <ul class="summary-points">
-                <li><i class="fas fa-check-circle"></i> US-Wirtschaft mit 2.4% Wachstum zeigt Resilienz trotz Zinserhöhungen</li>
-                <li><i class="fas fa-exclamation-triangle"></i> Chinas Wachstum verlangsamt sich auf 4.8% aufgrund Immobilienkrise</li>
-                <li><i class="fas fa-exclamation-triangle"></i> Europas größte Volkswirtschaft Deutschland stagniert bei 0.3%</li>
-                <li><i class="fas fa-info-circle"></i> Inflationsraten haben sich von 8.8% (2022) auf 5.7% (2024) normalisiert</li>
-                <li><i class="fas fa-info-circle"></i> OECD CLI signalisiert mit 51.7 Punkten leichte Erholung seit Q3/2023</li>
-            </ul>
-            
-            <h2 style="margin-top: 20px;">Einfach erklärt: Was bedeutet das alles?</h2>
-            <div style="background-color: #2c3e50; padding: 15px; border-radius: 8px; margin-top: 10px;">
-                <p>Die Weltwirtschaft befindet sich in einer fragilen Erholungsphase. Die USA wächst solide, aber Europa und China schwächeln. Die Inflation geht zurück, ist aber noch zu hoch. Deshalb halten die Zentralbanken die Zinsen hoch, was Kredite teuer macht und Investitionen bremst.</p>
-                <p>Die Stimmung in Unternehmen ist eher pessimistisch, besonders in der Industrie. Der weltweite Handel wächst nur langsam. Insgesamt deutet der leicht positive OECD-Frühindikator auf eine moderate Besserung in den nächsten 6-9 Monaten hin, aber mit erheblichen Risiken.</p>
+
+        <!-- OECD CLI-Karte -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">OECD Composite Leading Indicator</div>
+                <div class="card-icon"><i class="fas fa-arrow-trend-up"></i></div>
+            </div>
+            <div class="chart-container">
+                <canvas id="cliChart"></canvas>
+            </div>
+            <div class="metric">
+                <span class="metric-name">Aktueller CLI-Index:</span>
+                <span class="metric-value positive">51.7</span>
+            </div>
+            <div class="metric">
+                <span class="metric-name">Veränderung zum Vorquartal:</span>
+                <span class="metric-value positive">+3.5</span>
+            </div>
+            <div class="data-source">Quelle: OECD, 2024</div>
+            <div class="interpretation">
+                <strong>Was bedeutet das?</strong> Werte über 50 signalisieren Wachstum, unter 50 deuten auf Abschwung
+                hin.
+                Der steigende Trend (51.7) deutet auf eine leichte wirtschaftliche Erholung hin - ein positives Signal
+                für die kommenden 6-9 Monate.
+            </div>
+        </div>
+
+        <!-- Unternehmensumfragen-Karte -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">Unternehmensumfragen</div>
+                <div class="card-icon"><i class="fas fa-building"></i></div>
+            </div>
+            <div class="chart-container">
+                <canvas id="businessSurveyChart"></canvas>
+            </div>
+            <div class="metric">
+                <span class="metric-name">IfW Kiel Index:</span>
+                <span class="metric-value negative">94.7</span>
+            </div>
+            <div class="data-source">Quelle: IfW Kiel, 2024</div>
+            <div class="interpretation">
+                <strong>Was bedeutet das?</strong> 100 ist der neutrale Wert. Darunter (wie aktuell 94.7) bedeutet
+                pessimistische Unternehmensstimmung.
+                IT-Dienstleister (103.4) sind optimistisch, während Maschinenbauer (89.3) stark pessimistisch sind - ein
+                Warnsignal für die Industrie.
+            </div>
+        </div>
+
+        <!-- Inflation-Karte -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">Inflationsdynamik</div>
+                <div class="card-icon"><i class="fas fa-percent"></i></div>
+            </div>
+            <div class="chart-container">
+                <canvas id="inflationChart"></canvas>
+            </div>
+            <div class="metric">
+                <span class="metric-name">Globale Inflationsrate:</span>
+                <span class="metric-value neutral">5.7%</span>
+            </div>
+            <div class="metric">
+                <span class="metric-name">Kerninflation:</span>
+                <span class="metric-value negative">4.3%</span>
+            </div>
+            <div class="data-source">Quelle: IWF, 2024</div>
+            <div class="interpretation">
+                <strong>Was bedeutet das?</strong> Inflation ist rückläufig (gut), aber immer noch zu hoch (schlecht).
+                Zielwert wäre etwa 2%. Die aktuelle Kerninflation von 4.3% ist weiterhin problematisch und zwingt
+                Zentralbanken zu hohen Zinsen.
+            </div>
+        </div>
+
+        <!-- Leitzinsen-Karte -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">Leitzinsen</div>
+                <div class="card-icon"><i class="fas fa-money-bill-transfer"></i></div>
+            </div>
+            <div class="chart-container">
+                <canvas id="interestRateChart"></canvas>
+            </div>
+            <div class="metric">
+                <span class="metric-name">US Fed:</span>
+                <span class="metric-value negative">5.25-5.5%</span>
+            </div>
+            <div class="metric">
+                <span class="metric-name">EZB:</span>
+                <span class="metric-value negative">4.5%</span>
+            </div>
+            <div class="data-source">Quelle: Fed, EZB, 2024</div>
+            <div class="interpretation">
+                <strong>Was bedeutet das?</strong> Hohe Zinsen (wie aktuell) bremsen Investitionen und Kreditvergabe.
+                Die stark gestiegenen Zinsen seit 2022 zeigen, dass Zentralbanken die Inflation bekämpfen - auf Kosten
+                des Wirtschaftswachstums.
+            </div>
+        </div>
+
+        <!-- Handelsströme-Karte -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">Internationale Handelsströme</div>
+                <div class="card-icon"><i class="fas fa-ship"></i></div>
+            </div>
+            <div class="chart-container">
+                <canvas id="tradeChart"></canvas>
+            </div>
+            <div class="metric">
+                <span class="metric-name">Welthandelswachstum:</span>
+                <span class="metric-value neutral">2.1%</span>
+            </div>
+            <div class="metric">
+                <span class="metric-name">Baltic Dry Index:</span>
+                <span class="metric-value negative">1,214</span>
+            </div>
+            <div class="data-source">Quelle: World Trade Monitor, 2024</div>
+            <div class="interpretation">
+                <strong>Was bedeutet das?</strong> Das Handelswachstum von 2.1% ist schwach (Vor-Covid: 4.3%).
+                Der stark gefallene Baltic Dry Index (Frachtkosten) zeigt geringe Nachfrage und deutet auf
+                wirtschaftliche Schwäche hin.
             </div>
         </div>
     </div>
-    
-    <script>
+
+    <div class="summary">
+        <h2>Wirtschaftlicher Ausblick</h2>
+        <ul class="summary-points">
+            <li><i class="fas fa-check-circle"></i> US-Wirtschaft mit 2.4% Wachstum zeigt Resilienz trotz Zinserhöhungen
+            </li>
+            <li><i class="fas fa-exclamation-triangle"></i> Chinas Wachstum verlangsamt sich auf 4.8% aufgrund
+                Immobilienkrise
+            </li>
+            <li><i class="fas fa-exclamation-triangle"></i> Europas größte Volkswirtschaft Deutschland stagniert bei
+                0.3%
+            </li>
+            <li><i class="fas fa-info-circle"></i> Inflationsraten haben sich von 8.8% (2022) auf 5.7% (2024)
+                normalisiert
+            </li>
+            <li><i class="fas fa-info-circle"></i> OECD CLI signalisiert mit 51.7 Punkten leichte Erholung seit Q3/2023
+            </li>
+        </ul>
+
+        <h2 style="margin-top: 20px;">Einfach erklärt: Was bedeutet das alles?</h2>
+        <div style="background-color: #2c3e50; padding: 15px; border-radius: 8px; margin-top: 10px;">
+            <p>Die Weltwirtschaft befindet sich in einer fragilen Erholungsphase. Die USA wächst solide, aber Europa und
+                China schwächeln. Die Inflation geht zurück, ist aber noch zu hoch. Deshalb halten die Zentralbanken die
+                Zinsen hoch, was Kredite teuer macht und Investitionen bremst.</p>
+            <p>Die Stimmung in Unternehmen ist eher pessimistisch, besonders in der Industrie. Der weltweite Handel
+                wächst nur langsam. Insgesamt deutet der leicht positive OECD-Frühindikator auf eine moderate Besserung
+                in den nächsten 6-9 Monaten hin, aber mit erheblichen Risiken.</p>
+        </div>
+    </div>
+</div>
+
+<script>
         // Funktion zum Erzeugen zufälliger Farben für Charts
         function getRandomColor() {
             const letters = '0123456789ABCDEF';
@@ -427,13 +448,16 @@
             return color;
         }
         
-        // Funktion zum Erzeugen von Chart-Daten mit Trend
         function generateTrendData(start, min, max, count, trend = 0) {
-            const data = [start];
+            const data = [parseFloat(start)];
             for (let i = 1; i < count; i++) {
-                // Zufällige Änderung mit Trend-Komponente
+                const last = parseFloat(data[i - 1]);
+                if (isNaN(last)) {
+                    console.warn(`Ungültiger Startwert an Index ${i - 1}:`, data);
+                    break;
+                }
                 const change = (Math.random() * (max - min) + min) + trend;
-                data.push(parseFloat((data[i-1] + change).toFixed(1)));
+                data.push(parseFloat((last + change).toFixed(1)));
             }
             return data;
         }
@@ -931,6 +955,7 @@
                 refreshButton.addEventListener('click', updateDashboardWithRealData);
             }
         });
-    </script>
+
+</script>
 </body>
 </html>
