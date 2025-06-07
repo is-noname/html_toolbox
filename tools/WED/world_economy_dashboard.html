@@ -709,34 +709,34 @@
         // Script zum Laden der JSON-Daten und Aktualisieren des Dashboards
         async function updateDashboardWithRealData() {
             try {
-        // Daten laden mit Timeout für bessere UX
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
-        
-        const response = await fetch('api/economic_data.json', {
-            signal: controller.signal
-        });
-        clearTimeout(timeoutId);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP Fehler: ${response.status}`);
-        }
-        
-        const data = await response.json();
+                // Daten laden mit Timeout für bessere UX
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-        // Dashboard aktualisieren
-        document.querySelector('.date-update').textContent = 
-            `Letzte Aktualisierung: ${data.meta.last_updated}`;
-            
-        // Update each chart...
-        updateCharts(data);
-        
-    } catch (error) {
-        console.error("Fehler beim Aktualisieren des Dashboards:", error);
-        // UI-Feedback für Benutzer
-        document.querySelector('.date-update').textContent = 
-            `Aktualisierung fehlgeschlagen. Letzter Stand wird angezeigt.`;
-    }
+                const response = await fetch('./api/economic_data.json', {
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP Fehler: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                // Dashboard aktualisieren
+                document.querySelector('.date-update').textContent =
+                    `Letzte Aktualisierung: ${data.meta.last_updated}`;
+
+                // Update each chart...
+                updateCharts(data);
+
+            } catch (error) {
+                console.error("Fehler beim Aktualisieren des Dashboards:", error);
+                // UI-Feedback für Benutzer
+                document.querySelector('.date-update').textContent =
+                    `Aktualisierung fehlgeschlagen. Letzter Stand wird angezeigt.`;
+            }
         }
 
         function updateCharts(data) {
@@ -750,25 +750,25 @@
                 
                 // Chart aktualisieren je nach Typ
                 switch(key) {
-            case 'gdp':
-                updateGDPChart(dataset);
-                break;
-            case 'inflation':
-                updateInflationChart(dataset);
-                break;
-            case 'unemployment':
-                updateUnemploymentChart(dataset);
-                break;
-            case 'interest_rate_fed':
-                updateInterestRateChart(dataset);
-                break;
-            case 'world_trade':
-                updateTradeChart(dataset);
-                break;
-            // Weitere Fälle nach Bedarf
-            default:
-                console.log(`Kein Update-Handler für Datensatz: ${key}`);
-        }
+                    case 'gdp':
+                        updateGDPChart(dataset);
+                        break;
+                    case 'inflation':
+                        updateInflationChart(dataset);
+                        break;
+                    case 'unemployment':
+                        updateUnemploymentChart(dataset);
+                        break;
+                    case 'interest_rate_fed':
+                        updateInterestRateChart(dataset);
+                        break;
+                    case 'world_trade':
+                        updateTradeChart(dataset);
+                        break;
+                    // Weitere Fälle nach Bedarf
+                    default:
+                        console.log(`Kein Update-Handler für Datensatz: ${key}`);
+                }
             });
         }
 
@@ -915,8 +915,6 @@
             
             console.log(`Handels-Chart aktualisiert mit ${values.length} Datenpunkten`);
         }
-
-
 
 
         // Dashboard beim Laden aktualisieren
