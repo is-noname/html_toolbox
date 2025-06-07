@@ -750,22 +750,25 @@
                 
                 // Chart aktualisieren je nach Typ
                 switch(key) {
-                    case 'gdp':
-                        updateGDPChart(dataset);
-                        break;
-                    case 'inflation':
-                        updateInflationChart(dataset);
-                        break;
-                    case 'unemployment':
-                        updateUnemploymentChart(dataset);
-                        break;
-                    case 'interest_rate_fed':
-                        updateInterestRateChart(dataset);
-                        break;
-                    // Weitere Fälle nach Bedarf
-                    default:
-                        console.log(`Kein Update-Handler für Datensatz: ${key}`);
-                }
+            case 'gdp':
+                updateGDPChart(dataset);
+                break;
+            case 'inflation':
+                updateInflationChart(dataset);
+                break;
+            case 'unemployment':
+                updateUnemploymentChart(dataset);
+                break;
+            case 'interest_rate_fed':
+                updateInterestRateChart(dataset);
+                break;
+            case 'world_trade':
+                updateTradeChart(dataset);
+                break;
+            // Weitere Fälle nach Bedarf
+            default:
+                console.log(`Kein Update-Handler für Datensatz: ${key}`);
+        }
             });
         }
 
@@ -797,6 +800,110 @@
             // Chart neu zeichnen
             interestRateChart.update();
         }
+
+
+        // GDP-Chart aktualisieren
+        function updateGDPChart(dataset) {
+            // Aktuellen Wert extrahieren und im Chart anzeigen
+            const gdpData = dataset.data.latest;
+            
+            // BIP ist in Billionen, daher keine weitere Umrechnung nötig
+            gdpChart.data.datasets[0].data[0] = gdpData.value; // USA
+            
+            // Datum und Wert im Tooltip/Info anzeigen
+            const gdpContainer = document.querySelector('#gdpChart').closest('.card');
+            const gdpMetric = gdpContainer.querySelector('.metric-value');
+            
+            // Wenn es eine Metrik gibt, aktualisieren
+            if (gdpMetric) {
+                gdpMetric.textContent = `${gdpData.value.toFixed(1)} Billionen USD`;
+            }
+            
+            // Chart aktualisieren
+            gdpChart.update();
+            
+            console.log(`GDP-Chart aktualisiert: ${gdpData.value} (${gdpData.date})`);
+        }
+
+        // Inflations-Chart aktualisieren
+        function updateInflationChart(dataset) {
+            // Historische Daten filtern (z.B. nur Jahresdaten)
+            const inflationData = dataset.data.historical;
+            
+            // Nur jährliche Daten auswählen (Anfang des Jahres)
+            const yearlyData = inflationData.filter(d => d.date.endsWith('-01-01'))
+                                            .reverse() // Älteste zuerst
+                                            .slice(-5); // Nur die letzten 5 Jahre
+            
+            // Daten für den Chart vorbereiten
+            const dates = yearlyData.map(d => d.date.substring(0, 4)); // Nur das Jahr
+            const values = yearlyData.map(d => d.value);
+            
+            // Chart aktualisieren
+            inflationChart.data.labels = dates;
+            inflationChart.data.datasets[0].data = values;
+            
+            // Aktuellen Wert anzeigen
+            const latestValue = dataset.data.latest.value;
+            document.querySelector('#inflationChart').closest('.card')
+                    .querySelector('.metric-value').textContent = `${latestValue.toFixed(1)}%`;
+            
+            // Chart neu zeichnen
+            inflationChart.update();
+            
+            console.log(`Inflation-Chart aktualisiert mit ${values.length} Datenpunkten`);
+        }
+
+        // Arbeitslosigkeits-Chart aktualisieren
+        function updateUnemploymentChart(dataset) {
+            // Diese Funktion wäre für ein Arbeitslosigkeits-Chart
+            // Da im Dashboard kein solches Chart vorhanden ist, loggen wir nur
+            console.log('Arbeitslosigkeitsdaten verfügbar, aber kein Chart vorhanden');
+            
+            // Sollte ein Chart hinzugefügt werden, hier den Code ergänzen
+        }
+
+        // Baltic Dry und Welthandelsvolumen, falls Daten verfügbar sind
+        function updateTradeChart(dataset) {
+            // Historische Daten
+            const tradeData = dataset.data.historical;
+            
+            // Wenn keine Daten vorhanden sind, abbrechen
+            if (!tradeData || tradeData.length === 0) {
+                console.log('Keine Handelsdaten verfügbar');
+                return;
+            }
+            
+            // Nur jährliche Daten filtern
+            const yearlyData = tradeData.filter(d => d.date.endsWith('-01-01'))
+                                        .reverse()
+                                        .slice(-5);
+            
+            // Daten für den Chart vorbereiten
+            const dates = yearlyData.map(d => d.date.substring(0, 4));
+            const values = yearlyData.map(d => d.value);
+            
+            // Chart aktualisieren (erster Datensatz ist Welthandelswachstum)
+            tradeChart.data.labels = dates;
+            tradeChart.data.datasets[0].data = values;
+            
+            // Aktuellen Wert anzeigen
+            const latestValue = dataset.data.latest.value;
+            const metricElement = document.querySelector('#tradeChart').closest('.card')
+                                        .querySelector('.metric-value');
+            
+            if (metricElement) {
+                metricElement.textContent = `${latestValue.toFixed(1)}%`;
+            }
+            
+            // Chart neu zeichnen
+            tradeChart.update();
+            
+            console.log(`Handels-Chart aktualisiert mit ${values.length} Datenpunkten`);
+        }
+
+
+
 
         // Dashboard beim Laden aktualisieren
         document.addEventListener('DOMContentLoaded', function() {
