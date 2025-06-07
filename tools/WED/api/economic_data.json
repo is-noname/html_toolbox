@@ -1,7 +1,15 @@
 {
   "meta": {
-    "last_updated": "07.06.2025 22:57",
-    "source": "FRED (Federal Reserve Economic Data)"
+    "last_updated": "07.06.2025 23:37",
+    "source": "Multiple APIs via WED Data Updater",
+    "update_summary": {
+      "fred": {
+        "total": 5,
+        "successful": 5,
+        "failed": 0,
+        "errors": []
+      }
+    }
   },
   "datasets": {
     "gdp": {
@@ -9,8 +17,8 @@
       "unit": "Billionen USD",
       "data": {
         "latest": {
-          "value": 29.976637999999998,
-          "date": "2025-01-01"
+          "date": "2025-01-01",
+          "value": 29.977
         },
         "historical": [
           {
@@ -251,18 +259,18 @@
           },
           {
             "date": "2025-01-01",
-            "value": 29.976637999999998
+            "value": 29.977
           }
         ]
       }
     },
     "inflation": {
       "title": "Inflation (USA)",
-      "unit": "%",
+      "unit": "Index",
       "data": {
         "latest": {
-          "value": 320.321,
-          "date": "2025-04-01"
+          "date": "2025-04-01",
+          "value": 320.321
         },
         "historical": [
           {
@@ -765,8 +773,8 @@
       "unit": "%",
       "data": {
         "latest": {
-          "value": 4.33,
-          "date": "2025-05-01"
+          "date": "2025-05-01",
+          "value": 4.33
         },
         "historical": [
           {
@@ -1017,8 +1025,8 @@
       "unit": "%",
       "data": {
         "latest": {
-          "value": 0.25,
-          "date": "2017-01-01"
+          "date": "2017-01-01",
+          "value": 0.25
         },
         "historical": [
           {
@@ -1262,28 +1270,6 @@
             "value": 0.25
           }
         ]
-      }
-    },
-    "baltic_dry": {
-      "title": "Baltic Dry Index",
-      "unit": "Index",
-      "data": {
-        "latest": {
-          "value": "N/A",
-          "date": "N/A"
-        },
-        "historical": []
-      }
-    },
-    "world_trade": {
-      "title": "Welthandelsvolumen",
-      "unit": "Index 2010=100",
-      "data": {
-        "latest": {
-          "value": "N/A",
-          "date": "N/A"
-        },
-        "historical": []
       }
     }
   }

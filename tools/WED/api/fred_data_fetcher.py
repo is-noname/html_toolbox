@@ -100,6 +100,9 @@ def process_dataset(raw_data, dataset_info):
             if dataset_info["id"] == "GDP":
                 value = value / 1000  # Umrechnung in Billionen
 
+            # Hier Nachkommastellen kürzen, z.B. auf 1 Stelle:
+            value = round(value, 3)
+
             historical.append({
                 "date": entry['date'],
                 "value": value

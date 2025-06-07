@@ -381,6 +381,30 @@
             </div>
         </div>
 
+        <!-- Arbeitslosenquoten-Karte -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Arbeitslosenquoten</div>
+                    <div class="card-icon"><i class="fas fa-users"></i></div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="unemploymentChart"></canvas>
+                </div>
+                <div class="metric">
+                    <span class="metric-name">USA aktuell:</span>
+                    <span class="metric-value positive" id="unemployment-usa-current">4.2%</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-name">Trend (12 Monate):</span>
+                    <span class="metric-value neutral" id="unemployment-usa-trend">Stabil</span>
+                </div>
+                <div class="data-source">Quelle: Bureau of Labor Statistics, 2024</div>
+                <div class="interpretation">
+                    <strong>Was bedeutet das?</strong> 4.2% gilt z.B. als "Vollbeschäftigung" - weder zu hoch noch zu niedrig.
+                    Werte unter 3% würden Überhitzung signalisieren, über 6% Rezession. Ein stabiler aufwärts Trend ist positiv.
+                </div>
+            </div>
+
         <!-- Handelsströme-Karte -->
         <div class="card">
             <div class="card-header">
@@ -671,6 +695,41 @@
                 }
             }
         });
+
+        // Arbeitslosenquoten Chart - Multi-Country Support
+        const unemploymentCtx = document.getElementById('unemploymentChart').getContext('2d');
+        const unemploymentChart = new Chart(unemploymentCtx, {
+            type: 'line',
+            data: {
+                labels: ['2020', '2021', '2022', '2023', '2024'],
+                datasets: [{
+                    label: 'USA',
+                    data: [8.1, 5.4, 3.6, 3.7, 4.2],
+                    borderColor: '#3498db',
+                    backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                    fill: true,
+                    tension: 0.3,
+                    borderWidth: 2
+                }
+                // Hier können später weitere Länder hinzugefügt werden:
+                // { label: 'Deutschland', data: [...], borderColor: '#e74c3c' }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 12,
+                        title: {
+                            display: true,
+                            text: 'Arbeitslosenquote (%)'
+                        }
+                    }
+                }
+            }
+        });
         
         // Handelsströme Chart
         const tradeCtx = document.getElementById('tradeChart').getContext('2d');
@@ -892,13 +951,43 @@
             inflationChart.update();
         }
 
-        // Arbeitslosigkeits-Chart aktualisieren
         function updateUnemploymentChart(dataset) {
-            // Diese Funktion wäre für ein Arbeitslosigkeits-Chart
-            // Da im Dashboard kein solches Chart vorhanden ist, loggen wir nur
-            console.log('Arbeitslosigkeitsdaten verfügbar, aber kein Chart vorhanden');
-            
-            // Sollte ein Chart hinzugefügt werden, hier den Code ergänzen
+            const unemploymentData = dataset.data.historical;
+
+            // DEBUG: Schauen was da ist
+            console.log("Raw data sample:", unemploymentData.slice(0, 5));
+
+            // Ein Wert pro Jahr nehmen (egal welcher Monat)
+            const yearlyData = [];
+            const seenYears = new Set();
+
+            for (let entry of unemploymentData) {
+                const year = entry.date.substring(0, 4);
+                if (!seenYears.has(year)) {
+                    yearlyData.push(entry);
+                    seenYears.add(year);
+                }
+            }
+
+            // Nur letzte 5 Jahre, chronologisch sortiert
+            const last5Years = yearlyData.slice(-5);
+
+            console.log("Filtered yearly data:", last5Years);
+
+            const years = last5Years.map(d => d.date.substring(0, 4));
+            const values = last5Years.map(d => d.value);
+
+            console.log("Years:", years);
+            console.log("Values:", values);
+
+            unemploymentChart.data.labels = years;
+            unemploymentChart.data.datasets[0].data = values;
+
+            // UI Update
+            const currentValue = dataset.data.latest.value;
+            document.getElementById('unemployment-usa-current').textContent = `${currentValue}%`;
+
+            unemploymentChart.update();
         }
 
         // Baltic Dry und Welthandelsvolumen, falls Daten verfügbar sind
