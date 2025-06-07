@@ -34,7 +34,7 @@ datasets = {
     "inflation": {
         "id": "CPIAUCSL",
         "title": "Inflation (USA)",
-        "unit": "%"
+        "unit": "Index"
     },
     "unemployment": {
         "id": "UNRATE",
@@ -93,7 +93,12 @@ def process_dataset(raw_data, dataset_info):
 
     # Für Charts: Historische Daten (neueste zuerst)
     historical = []
+
     for entry in raw_data:
+        # FRED nutzt "." für fehlende Werte
+        if entry.get('value') == '.' or entry.get('value') is None:
+            continue
+
         try:
             value = float(entry['value'])
             # Spezielle Formatierung für bestimmte Datensätze
