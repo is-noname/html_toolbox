@@ -1,6 +1,6 @@
 {
   "meta": {
-    "last_updated": "07.06.2025 23:37",
+    "last_updated": "08.06.2025 10:52",
     "source": "Multiple APIs via WED Data Updater",
     "update_summary": {
       "fred": {
@@ -18,7 +18,7 @@
       "data": {
         "latest": {
           "date": "2025-01-01",
-          "value": 29.977
+          "value": 29.976637999999998
         },
         "historical": [
           {
@@ -259,7 +259,7 @@
           },
           {
             "date": "2025-01-01",
-            "value": 29.977
+            "value": 29.976637999999998
           }
         ]
       }

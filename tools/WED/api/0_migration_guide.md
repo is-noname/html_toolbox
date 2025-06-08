@@ -32,14 +32,14 @@ touch sources/__init__.py
 ### 2. Konfiguration migrieren
 **Alt:** API-Key direkt im Code
 ```python
-API_KEY = "bbc4b13f812a3a505523ab2a982e4a66"
+API_KEY = "KEY EINGEBEN"
 ```
 
 **Neu:** API-Key in `api_config.json`
 ```json
 {
   "api_keys": {
-    "fred": "bbc4b13f812a3a505523ab2a982e4a66"
+    "fred": "KEY EINGEBEN"
   }
 }
 ```
@@ -78,7 +78,7 @@ data = update_dataset('fred', 'gdp')
 **Alt:** Dashboard lädt direkt `economic_data.json`
 ```javascript
 // Bleibt unverändert! 
-fetch('economic_data.json')
+fetch('api/economic_data.json')
   .then(response => response.json())
   .then(data => updateCharts(data));
 ```
