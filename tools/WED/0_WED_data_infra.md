@@ -32,7 +32,7 @@ Diese Komponente verwaltet die Datenerfassung und -aktualisierung für das World
 
 ## Status
 - [x] Grundlegende FRED-Integration (fred_data_fetcher.py)
-- [ ] Modularer API-Manager
+- [x] Modularer API-Manager
 - [ ] Automatisierte Aktualisierungslogik
 - [ ] Fehlerbehandlung und Logging
 - [ ] Erweiterung um weitere Datenquellen
