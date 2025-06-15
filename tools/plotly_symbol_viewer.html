@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plotly Symbole Visualisierung</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <style>
+    /* Reset/Base */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* Layout */
+    body {
+      background: #f5f5f5;
+      color: #1a1a1a;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.5;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    /* Components */
+    .input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid #333;
+      border-radius: 6px;
+      background: #ffffff;
+      color: #1a1a1a;
+      font-size: 16px;
+      margin-top: 4px;
+      margin-bottom: 16px;
+    }
+    .input:focus {
+      outline: none;
+      border-color: #06fc99;
+      box-shadow: 0 0 0 2px rgba(6,252,153,0.2);
+    }
+    .btn {
+      padding: 12px 24px;
+      border-radius: 8px;
+      background: #06fc99;
+      color: #1a1a1a;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      min-height: 44px;
+      font-size: 16px;
+    }
+    .btn:hover { opacity: 0.8; }
+    .btn:focus { outline: 2px solid #06fc99; }
+
+    /* Chart Container */
+    #chart {
+      width: 100%;
+      height: 400px;
+    }
+
+    /* Media Queries */
+    @media (max-width: 600px) {
+      .btn { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Plotly Symbole Visualisieren</h1>
+    <form id="symbol-form">
+      <label for="symbols">Symbolnamen (Komma-getrennt)</label>
+      <input type="text" id="symbols" class="input" placeholder="z.B. circle, square-open, star" required>
+
+      <label for="color">Füllfarbe</label>
+      <input type="color" id="color" class="input" value="#1f77b4">
+
+      <label for="lineColor">Linienfarbe</label>
+      <input type="color" id="lineColor" class="input" value="#000000">
+
+      <button type="submit" class="btn">Anzeigen</button>
+    </form>
+
+    <div id="chart"></div>
+  </div>
+
+  <script>
+    document.getElementById('symbol-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const names = document.getElementById('symbols').value.split(',').map(s => s.trim()).filter(s => s);
+      const fill = document.getElementById('color').value;
+      const line = document.getElementById('lineColor').value;
+      const traces = names.map((sym, i) => ({
+        x: [i],
+        y: [1],
+        mode: 'markers',
+        name: sym,
+        marker: {
+          symbol: sym,
+          size: 40,
+          color: fill,
+          line: { color: line, width: 2 }
+        }
+      }));
+      const layout = {
+        title: '',
+        showlegend: false,
+        xaxis: { showticklabels: false, zeroline: false },
+        yaxis: { showticklabels: false, zeroline: false },
+        margin: { l: 20, r: 20, t: 20, b: 20 }
+      };
+      Plotly.newPlot('chart', traces, layout, {responsive: true});
+    });
+  </script>
+</body>
+</html>

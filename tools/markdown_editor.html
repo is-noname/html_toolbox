@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Markdown Kommentar Editor</title>
+  <style>
+    /* Reset & Base */
+    * { box-sizing: border-box; }
+    body { 
+      margin: 0; 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+      background: #1a1a1a; 
+      color: #f5f5f5; 
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    /* Layout */
+    .container { 
+      max-width: 800px; 
+      margin: auto; 
+      padding: 24px; 
+    }
+
+    h1 { 
+      margin-bottom: 24px; 
+      font-size: 2rem; 
+      font-weight: 600;
+    }
+
+    /* Components */
+    .btn {
+      padding: 12px 24px;
+      border-radius: 8px;
+      background: #06fc99;
+      color: #1a1a1a;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    .btn:hover { 
+      opacity: 0.8; 
+    }
+
+    .btn:focus { 
+      outline: 2px solid #06fc99; 
+      outline-offset: 2px;
+    }
+
+    .btn:active {
+      transform: translateY(1px);
+    }
+
+    .btn-secondary {
+      background: #333;
+      color: #f5f5f5;
+    }
+
+    .btn-secondary:focus {
+      outline: 2px solid #555;
+    }
+
+    /* Controls Layout */
+    #controls { 
+      display: grid;
+      grid-template-columns: auto auto 1fr auto;
+      gap: 16px; 
+      align-items: center;
+      margin-bottom: 32px; 
+    }
+
+    /* Drop Zone */
+    .drop-zone {
+      border: 2px dashed #06fc99;
+      border-radius: 8px;
+      padding: 32px;
+      text-align: center;
+      transition: all 0.2s ease;
+      background: rgba(6, 252, 153, 0.05);
+      cursor: pointer;
+    }
+
+    .drop-zone:hover,
+    .drop-zone.dragover {
+      background: rgba(6, 252, 153, 0.1);
+      border-color: #06fc99;
+    }
+
+    .drop-zone:focus {
+      outline: 2px solid #06fc99;
+      outline-offset: 2px;
+    }
+
+    /* Lines Container */
+    #lines { 
+      max-height: 60vh; 
+      overflow-y: auto; 
+      margin-bottom: 24px;
+      border: 1px solid #333;
+      border-radius: 8px;
+      background: #2a2a2a;
+    }
+
+    #lines:empty::before {
+      content: "Keine Zeilen geladen. Text einfügen oder Datei ziehen.";
+      display: block;
+      padding: 48px 24px;
+      text-align: center;
+      color: #777;
+      font-style: italic;
+    }
+
+    .line-row { 
+      display: grid; 
+      grid-template-columns: 40px 1fr 1fr; 
+      gap: 16px; 
+      align-items: start; 
+      padding: 16px;
+      border-bottom: 1px solid #333;
+    }
+
+    .line-row:last-child {
+      border-bottom: none;
+    }
+
+    .line-number {
+      color: #777;
+      font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+      font-size: 14px;
+      text-align: right;
+      padding-top: 8px;
+      user-select: none;
+    }
+
+    .line-text, .line-comment { 
+      width: 100%; 
+      background: #1a1a1a; 
+      color: #f5f5f5; 
+      border: 1px solid #333; 
+      border-radius: 6px; 
+      padding: 12px 16px; 
+      font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace; 
+      font-size: 14px;
+      line-height: 1.4;
+      resize: vertical;
+      min-height: 40px;
+    }
+
+    .line-text {
+      background: #2a2a2a;
+    }
+
+    .line-text:focus, .line-comment:focus {
+      outline: none;
+      border-color: #06fc99;
+      box-shadow: 0 0 0 2px rgba(6, 252, 153, 0.2);
+    }
+
+    .line-comment::placeholder {
+      color: #777;
+    }
+
+    /* Actions */
+    #actions {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    /* Stats */
+    .stats {
+      color: #777;
+      font-size: 14px;
+      display: flex;
+      gap: 24px;
+    }
+
+    /* Keyboard Shortcuts Info */
+    .shortcuts {
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+      background: #333;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      color: #777;
+      opacity: 0.7;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      #controls {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      
+      .line-row {
+        grid-template-columns: 30px 1fr;
+        gap: 12px;
+      }
+      
+      .line-comment {
+        grid-column: 2;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Markdown Kommentar Editor</h1>
+    
+    <div id="controls">
+      <button class="btn" id="paste-btn" title="Strg+V">Einfügen</button>
+      <button class="btn btn-secondary" id="clear-btn" title="Alles löschen">Leeren</button>
+      <div class="drop-zone" id="drop-zone" tabindex="0" role="button" aria-label="Datei hierher ziehen oder klicken">
+        📄 Datei hierher ziehen oder klicken
+      </div>
+      <input type="file" id="file-input" accept=".txt,.md,.markdown" style="display: none;" aria-label="Datei auswählen">
+    </div>
+
+    <div id="lines" role="region" aria-label="Code-Zeilen mit Kommentaren"></div>
+
+    <div class="stats">
+      <span id="line-count">0 Zeilen</span>
+      <span id="comment-count">0 Kommentare</span>
+    </div>
+
+    <div id="actions">
+      <button class="btn" id="copy-btn" title="Strg+C">📋 Als Markdown kopieren</button>
+      <button class="btn btn-secondary" id="download-btn" title="Als .md Datei herunterladen">💾 Download</button>
+    </div>
+  </div>
+
+  <div class="shortcuts">
+    Strg+V: Einfügen | Strg+C: Kopieren | Strg+L: Leeren
+  </div>
+
+  <script>
+    'use strict';
+    
+    // Elements
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+    const pasteBtn = document.getElementById('paste-btn');
+    const clearBtn = document.getElementById('clear-btn');
+    const linesEl = document.getElementById('lines');
+    const copyBtn = document.getElementById('copy-btn');
+    const downloadBtn = document.getElementById('download-btn');
+    const lineCount = document.getElementById('line-count');
+    const commentCount = document.getElementById('comment-count');
+
+    // State
+    let currentLines = [];
+
+    // Load text and create editor rows
+    function loadText(text) {
+      linesEl.innerHTML = '';
+      currentLines = text.split(/\r?\n/);
+      
+      currentLines.forEach((line, index) => {
+        createLineRow(line, index + 1);
+      });
+      
+      updateStats();
+    }
+
+    // Create a single line row with auto-resize
+    function createLineRow(lineText, lineNumber) {
+      const row = document.createElement('div');
+      row.className = 'line-row';
+      
+      const numEl = document.createElement('div');
+      numEl.className = 'line-number';
+      numEl.textContent = lineNumber;
+      
+      const textEl = document.createElement('textarea');
+      textEl.className = 'line-text';
+      textEl.value = lineText;
+      textEl.readOnly = true;
+      textEl.setAttribute('aria-label', `Zeile ${lineNumber}`);
+      
+      const commentEl = document.createElement('textarea');
+      commentEl.className = 'line-comment';
+      commentEl.placeholder = 'Kommentar hinzufügen...';
+      commentEl.setAttribute('aria-label', `Kommentar für Zeile ${lineNumber}`);
+      
+      // Auto-resize textareas
+      [textEl, commentEl].forEach(el => {
+        el.addEventListener('input', () => {
+          el.style.height = 'auto';
+          el.style.height = el.scrollHeight + 'px';
+          updateStats();
+        });
+      });
+      
+      row.append(numEl, textEl, commentEl);
+      linesEl.append(row);
+    }
+
+    // Update statistics
+    function updateStats() {
+      const lines = document.querySelectorAll('.line-row').length;
+      const comments = Array.from(document.querySelectorAll('.line-comment'))
+        .filter(el => el.value.trim()).length;
+      
+      lineCount.textContent = `${lines} Zeilen`;
+      commentCount.textContent = `${comments} Kommentare`;
+    }
+
+    // Generate markdown output
+    function generateMarkdown() {
+      let markdown = '';
+      
+      document.querySelectorAll('.line-row').forEach(row => {
+        const textEl = row.querySelector('.line-text');
+        const commentEl = row.querySelector('.line-comment');
+        const text = textEl.value;
+        const comment = commentEl.value.trim();
+        
+        markdown += text + '\n';
+        if (comment) {
+          markdown += '> ' + comment + '\n';
+        }
+        markdown += '\n';
+      });
+      
+      return markdown.trim();
+    }
+
+    // Event Handlers
+    pasteBtn.addEventListener('click', async () => {
+      try {
+        const text = await navigator.clipboard.readText();
+        loadText(text);
+        showFeedback(pasteBtn, '✓ Eingefügt');
+      } catch (error) {
+        showError('Fehler beim Einfügen aus Zwischenablage');
+      }
+    });
+
+    clearBtn.addEventListener('click', () => {
+      if (currentLines.length > 0 && confirm('Alle Zeilen löschen?')) {
+        linesEl.innerHTML = '';
+        currentLines = [];
+        updateStats();
+        showFeedback(clearBtn, '✓ Geleert');
+      }
+    });
+
+    copyBtn.addEventListener('click', async () => {
+      try {
+        const markdown = generateMarkdown();
+        await navigator.clipboard.writeText(markdown);
+        showFeedback(copyBtn, '✓ Kopiert!');
+      } catch (error) {
+        showError('Kopieren fehlgeschlagen');
+      }
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      const markdown = generateMarkdown();
+      const blob = new Blob([markdown], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'kommentare.md';
+      a.click();
+      URL.revokeObjectURL(url);
+      showFeedback(downloadBtn, '✓ Download');
+    });
+
+    // File handling
+    dropZone.addEventListener('click', () => fileInput.click());
+    
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) handleFile(file);
+    });
+
+    // Drag & Drop
+    ['dragover', 'dragleave', 'drop'].forEach(eventType => {
+      dropZone.addEventListener(eventType, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (eventType === 'dragover') {
+          dropZone.classList.add('dragover');
+        } else if (eventType === 'dragleave' || eventType === 'drop') {
+          dropZone.classList.remove('dragover');
+        }
+        
+        if (eventType === 'drop') {
+          const file = e.dataTransfer.files[0];
+          if (file) handleFile(file);
+        }
+      });
+    });
+
+    // File processing
+    function handleFile(file) {
+      if (!file.type.match(/text.*/) && !file.name.match(/\.(txt|md|markdown)$/i)) {
+        showError('Nur Text-Dateien (.txt, .md) unterstützt');
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        loadText(e.target.result);
+        showFeedback(dropZone, '✓ Datei geladen');
+      };
+      reader.onerror = () => showError('Fehler beim Lesen der Datei');
+      reader.readAsText(file, 'UTF-8');
+    }
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey || e.metaKey) {
+        switch (e.key) {
+          case 'v':
+            if (e.target === document.body) {
+              e.preventDefault();
+              pasteBtn.click();
+            }
+            break;
+          case 'c':
+            if (e.target === document.body) {
+              e.preventDefault();
+              copyBtn.click();
+            }
+            break;
+          case 'l':
+            e.preventDefault();
+            clearBtn.click();
+            break;
+        }
+      }
+    });
+
+    // Utility functions
+    function showFeedback(element, message) {
+      const original = element.textContent;
+      element.textContent = message;
+      setTimeout(() => {
+        element.textContent = original;
+      }, 2000);
+    }
+
+    function showError(message) {
+      // Simple error display - could be enhanced with toast notifications
+      alert(message);
+    }
+
+    // Initialize empty state
+    updateStats();
+  </script>
+</body>
+</html>

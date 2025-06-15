@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Farbcode Editor</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 500px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+      color: #1a1a1a;
+    }
+    .form-group {
+      margin-bottom: 1em;
+    }
+    label {
+      display: block;
+      margin-bottom: 0.5em;
+      font-weight: bold;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 8px;
+      font-size: 1em;
+      border: 1px solid #333;
+      border-radius: 4px;
+      margin-bottom: 0.5em;
+    }
+    input[type="color"] {
+      width: 50px;
+      height: 50px;
+      padding: 0;
+      border: none;
+      background: none;
+      cursor: pointer;
+    }
+    #preview {
+      width: 100%;
+      height: 100px;
+      border: 1px solid #333;
+      border-radius: 4px;
+      margin-bottom: 1em;
+      background-color: #ffaa00;
+    }
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      background: #06fc99;
+      color: #1a1a1a;
+      font-size: 1em;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Farbcode Editor</h1>
+
+  <div class="form-group">
+    <label for="hexInput">Hex-Code (ohne #):</label>
+    <input type="text" id="hexInput" value="ffaa00" maxlength="6" />
+  </div>
+
+  <div class="form-group">
+    <label for="colorPicker">Farbe wählen:</label>
+    <input type="color" id="colorPicker" value="#ffaa00" />
+  </div>
+
+  <div id="preview"></div>
+
+  <button id="copyBtn">In Zwischenablage kopieren</button>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const hexInput = document.getElementById('hexInput');
+      const colorPicker = document.getElementById('colorPicker');
+      const preview = document.getElementById('preview');
+      const copyBtn = document.getElementById('copyBtn');
+
+      // Initiale Vorschau
+      preview.style.backgroundColor = colorPicker.value;
+
+      function updateColor(hex) {
+        const code = '#' + hex;
+        colorPicker.value = code;
+        preview.style.backgroundColor = code;
+      }
+
+      hexInput.addEventListener('input', () => {
+        // Nur hexadezimale Zeichen und max. 6
+        let raw = hexInput.value;
+        let hex = raw.replace(/[^0-9A-Fa-f]/g, '').slice(0, 6);
+        hexInput.value = hex;
+        if (hex.length === 6) {
+          updateColor(hex);
+        }
+      });
+
+      colorPicker.addEventListener('input', () => {
+        const code = colorPicker.value;
+        const hex = code.replace('#', '');
+        hexInput.value = hex;
+        preview.style.backgroundColor = code;
+      });
+
+      copyBtn.addEventListener('click', async () => {
+        const code = hexInput.value;
+        if (!/^([0-9A-Fa-f]{6})$/.test(code)) {
+          alert('Ungültiger Hex-Code');
+          return;
+        }
+        try {
+          await navigator.clipboard.writeText(code);
+          alert('Hex-Code "' + code + '" kopiert!');
+        } catch (err) {
+          alert('Kopieren fehlgeschlagen');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
