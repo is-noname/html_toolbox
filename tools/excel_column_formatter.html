@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Excel Spalten Formatter</title>
+    <style>
+        /* === BASE STYLES === */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a1a;
+            color: #f5f5f5;
+            font-size: 16px;
+            line-height: 1.5;
+            padding: 16px;
+        }
+
+        /* === LAYOUT === */
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #777;
+            font-size: 14px;
+        }
+
+        .section {
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 1.2rem;
+            margin-bottom: 12px;
+            color: #06fc99;
+        }
+
+        /* === BUTTONS === */
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            background: #06fc99;
+            color: #1a1a1a;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-height: 44px;
+            font-size: 16px;
+            font-weight: 500;
+            width: 100%;
+            margin-bottom: 16px;
+        }
+
+        .btn:hover {
+            opacity: 0.8;
+        }
+
+        .btn:focus {
+            outline: 2px solid #06fc99;
+            outline-offset: 2px;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #333;
+            color: #f5f5f5;
+            border: 1px solid #555;
+        }
+
+        /* === TEXTAREAS === */
+        .textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #333;
+            border-radius: 6px;
+            background: #1a1a1a;
+            color: #f5f5f5;
+            font-size: 16px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .textarea:focus {
+            outline: none;
+            border-color: #06fc99;
+            box-shadow: 0 0 0 2px rgba(6, 252, 153, 0.2);
+        }
+
+        .textarea-result {
+            min-height: 180px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        /* === STATUS === */
+        .status {
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .status.success {
+            background: rgba(6, 252, 153, 0.1);
+            color: #06fc99;
+            border: 1px solid rgba(6, 252, 153, 0.3);
+        }
+
+        .status.error {
+            background: rgba(255, 82, 82, 0.1);
+            color: #ff5252;
+            border: 1px solid rgba(255, 82, 82, 0.3);
+        }
+
+        /* === RESPONSIVE === */
+        @media (min-width: 768px) {
+            body {
+                padding: 32px;
+            }
+
+            .btn {
+                width: auto;
+                min-width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- === HEADER SECTION === -->
+        <header class="header">
+            <h1>Excel Spalten Formatter</h1>
+            <p>Wandelt Excel-Spalten (Zeilen) in kommagetrennte Werte um</p>
+        </header>
+
+        <!-- === INPUT SECTION === -->
+        <section class="section">
+            <h2 class="section-title">1. Text einfügen</h2>
+            <button id="pasteBtn" class="btn">📋 Aus Zwischenablage einfügen</button>
+            
+            <div id="status" class="status"></div>
+            
+            <textarea 
+                id="inputText" 
+                class="textarea" 
+                placeholder="Oder hier direkt Text eingeben/einfügen..."
+                aria-label="Eingabetext"></textarea>
+        </section>
+
+        <!-- === RESULT SECTION === -->
+        <section class="section">
+            <h2 class="section-title">2. Ergebnis</h2>
+            <button id="copyBtn" class="btn btn-secondary" disabled>📄 Ergebnis kopieren</button>
+            
+            <textarea 
+                id="resultText" 
+                class="textarea textarea-result" 
+                placeholder="Formatiertes Ergebnis erscheint hier..."
+                aria-label="Ergebnis"></textarea>
+        </section>
+    </div>
+
+    <script>
+        'use strict';
+
+        // === DOM ELEMENTS === 
+        const pasteBtn = document.getElementById('pasteBtn');
+        const copyBtn = document.getElementById('copyBtn');
+        const inputText = document.getElementById('inputText');
+        const resultText = document.getElementById('resultText');
+        const status = document.getElementById('status');
+
+        // === STATUS HELPER === 
+        function showStatus(message, type = 'success') {
+            status.textContent = message;
+            status.className = `status ${type}`;
+            status.style.display = 'block';
+            
+            setTimeout(() => {
+                status.style.display = 'none';
+            }, 3000);
+        }
+
+        // === TEXT PROCESSING === 
+        function formatExcelColumn(text) {
+            if (!text.trim()) return '';
+            
+            // Zeilen splitten und leere entfernen
+            const lines = text
+                .split('\n')
+                .map(line => line.trim())
+                .filter(line => line.length > 0);
+            
+            // Mit Komma verbinden
+            return lines.join(', ');
+        }
+
+        // === CLIPBOARD PASTE === 
+        async function pasteFromClipboard() {
+            try {
+                pasteBtn.disabled = true;
+                pasteBtn.textContent = '⏳ Einfügen...';
+                
+                if (!navigator.clipboard) {
+                    throw new Error('Zwischenablage nicht verfügbar');
+                }
+                
+                const text = await navigator.clipboard.readText();
+                
+                if (!text.trim()) {
+                    throw new Error('Zwischenablage ist leer');
+                }
+                
+                inputText.value = text;
+                processText();
+                showStatus('✅ Text eingefügt');
+                
+            } catch (error) {
+                showStatus(`❌ Fehler: ${error.message}`, 'error');
+            } finally {
+                pasteBtn.disabled = false;
+                pasteBtn.textContent = '📋 Aus Zwischenablage einfügen';
+            }
+        }
+
+        // === CLIPBOARD COPY === 
+        async function copyToClipboard() {
+            try {
+                copyBtn.disabled = true;
+                copyBtn.textContent = '⏳ Kopieren...';
+                
+                const text = resultText.value;
+                if (!text.trim()) {
+                    throw new Error('Nichts zum Kopieren vorhanden');
+                }
+                
+                await navigator.clipboard.writeText(text);
+                showStatus('✅ Ergebnis kopiert');
+                
+            } catch (error) {
+                showStatus(`❌ Fehler: ${error.message}`, 'error');
+            } finally {
+                copyBtn.disabled = false;
+                copyBtn.textContent = '📄 Ergebnis kopieren';
+            }
+        }
+
+        // === TEXT PROCESSING === 
+        function processText() {
+            const input = inputText.value;
+            const formatted = formatExcelColumn(input);
+            
+            resultText.value = formatted;
+            copyBtn.disabled = !formatted.trim();
+        }
+
+        // === EVENT LISTENERS === 
+        pasteBtn.addEventListener('click', pasteFromClipboard);
+        copyBtn.addEventListener('click', copyToClipboard);
+        inputText.addEventListener('input', processText);
+
+        // === KEYBOARD SHORTCUTS === 
+        document.addEventListener('keydown', (e) => {
+            // Strg+V oder Cmd+V für Paste
+            if ((e.ctrlKey || e.metaKey) && e.key === 'v' && e.target !== inputText) {
+                e.preventDefault();
+                pasteFromClipboard();
+            }
+            
+            // Strg+C oder Cmd+C für Copy (wenn Ergebnis fokussiert)
+            if ((e.ctrlKey || e.metaKey) && e.key === 'c' && e.target === resultText) {
+                copyToClipboard();
+            }
+        });
+
+        // === INITIAL STATE === 
+        processText(); // Verarbeite initialen Text falls vorhanden
+    </script>
+</body>
+</html>
