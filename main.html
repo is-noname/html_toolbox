@@ -271,7 +271,7 @@
 
         // === State ===
         let currentToolIndex = 0;
-        let filteredTools = [...tools];
+        let filteredTools = [];
 
         // === Functions ===
         function groupToolsByCategory(toolList) {
@@ -392,14 +392,23 @@
 
         // === Initialize ===
         // Render initial list
-        renderToolList();
-
-        // Load last used tool or first tool
-        const savedIndex = localStorage.getItem('lastToolIndex');
-        const startIndex = savedIndex ? parseInt(savedIndex) : 0;
-        if (tools[startIndex]) {
-            loadTool(startIndex);
+        function initializeApp() {
+            if (typeof tools === 'undefined') {
+                setTimeout(initializeApp, 50);
+                return;
+            }
+            
+            filteredTools = [...tools];
+            renderToolList();
+            
+            const savedIndex = localStorage.getItem('lastToolIndex');
+            const startIndex = savedIndex ? parseInt(savedIndex) : 0;
+            if (tools[startIndex]) {
+                loadTool(startIndex);
+            }
         }
+
+        initializeApp();
 
         // Focus search on "/" key
         document.addEventListener('keydown', (e) => {
