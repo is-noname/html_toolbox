@@ -6,100 +6,422 @@
     <title>Tool Launcher</title>
     <link rel="icon" href="raccoon.png" type="image/png">
     <style>
-        /* Grundlayout: Sidebar und Content-Bereich */
-        body {
+        /* === Dark Mode Theme === */
+        :root {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2a2a2a;
+            --bg-hover: #333;
+            --text-primary: #f5f5f5;
+            --text-secondary: #999;
+            --accent: #06fc99;
+            --border: #333;
+        }
+
+        * {
             margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             display: flex;
             height: 100vh;
             overflow: hidden;
+            background: var(--bg-primary);
+            color: var(--text-primary);
         }
+
+        /* === Sidebar === */
         #sidebar {
-            width: 200px;
-            background-color: #f0f0f0;
-            border-right: 1px solid #ccc;
+            width: 260px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
             overflow-y: auto;
+            display: flex;
+            flex-direction: column;
         }
-        #sidebar ul {
+
+        /* Logo/Title */
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-primary);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .sidebar-header h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Search Box */
+        .search-container {
+            padding: 16px;
+            background: var(--bg-primary);
+            position: sticky;
+            top: 60px;
+            z-index: 9;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(6, 252, 153, 0.2);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        /* Category Headers */
+        .category {
+            margin-top: 8px;
+        }
+
+        .category-header {
+            padding: 8px 16px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .category-count {
+            background: var(--bg-hover);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+        }
+
+        /* Tool List */
+        #tool-list {
             list-style: none;
-            padding: 0;
-            margin: 0;
+            flex: 1;
         }
-        #sidebar li {
-            padding: 10px;
+
+        #tool-list li {
+            padding: 12px 20px;
             cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
         }
-        #sidebar li:hover, #sidebar li.active {
-            background-color: #ddd;
+
+        #tool-list li:hover {
+            background: var(--bg-hover);
+            padding-left: 24px;
         }
+
+        #tool-list li.active {
+            background: var(--bg-hover);
+            border-left: 3px solid var(--accent);
+            padding-left: 17px;
+        }
+
+        #tool-list li.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: var(--accent);
+        }
+
+        /* Tool Icons */
+        .tool-icon {
+            font-size: 16px;
+            opacity: 0.8;
+        }
+
+        /* Tool Badge */
+        .tool-badge {
+            margin-left: auto;
+            font-size: 10px;
+            padding: 2px 6px;
+            background: var(--accent);
+            color: var(--bg-primary);
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        /* No Results */
+        .no-results {
+            padding: 40px 20px;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        /* Content Area */
         #content {
             flex: 1;
-            overflow: auto;
+            overflow: hidden;
+            background: var(--bg-primary);
+            position: relative;
         }
-        /* Eingebettetes Werkzeug mit voller Breite und Höhe */
+
         iframe {
             border: none;
             width: 100%;
             height: 100%;
+            background: var(--bg-primary);
+        }
+
+        /* Loading State */
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--text-secondary);
+        }
+
+        /* Custom Scrollbar */
+        #sidebar::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #sidebar::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        #sidebar::-webkit-scrollbar-thumb {
+            background: var(--bg-hover);
+            border-radius: 4px;
+        }
+
+        #sidebar::-webkit-scrollbar-thumb:hover {
+            background: #444;
+        }
+
+        /* Hide categories if empty */
+        .category.hidden {
+            display: none;
+        }
+
+        /* Keyboard Navigation Indicator */
+        #tool-list li:focus {
+            outline: 2px solid var(--accent);
+            outline-offset: -2px;
         }
     </style>
 </head>
 <body>
-    <!-- Sidebar für die Liste der Tools -->
+    <!-- Sidebar -->
     <nav id="sidebar">
+        <div class="sidebar-header">
+            <h1>🦝 Toolbox</h1>
+        </div>
+        
+        <div class="search-container">
+            <input 
+                type="search" 
+                class="search-input" 
+                id="search" 
+                placeholder="Tool suchen..." 
+                autocomplete="off"
+            >
+        </div>
+        
         <ul id="tool-list"></ul>
     </nav>
 
-    <!-- Bereich zum Einbinden des ausgewählten Tools ist -->
+    <!-- Content Area -->
     <section id="content">
+        <div class="loading">Lade Tool...</div>
         <iframe id="tool-frame" src="" title="Tool-Viewer"></iframe>
     </section>
 
     <script>
-        // Tools liegen nun im Unterordner "tools"; Pfad entsprechend anpassen !hier ##########
+        // === Tool Configuration ===
+        // Einfach eine Zeile hinzufügen für ein neues Tool!
         const tools = [
-            { name: 'Code Saver', file: 'tools/code_saver.html' },
-            { name: 'CSV Manipulator', file: 'tools/csv_manipulator.html' },
-            { name: 'String Set', file: 'tools/string_set.html' },
-            { name: 'Prompt Formatter', file: 'tools/prompt_formatter.html' },
-            { name: 'Beautify Tools', file: 'https://beautifytools.com/' },
-            { name: 'Binance API Extractor', file: 'tools/binance_api_data_extractor.html' },
-            { name: 'Markdown Viewer', file: 'tools/markdown_viewer.html' },
-            { name: 'PlantUML Viewer', file: 'https://www.plantuml.com/plantuml/uml' },
-            { name: 'World Economy Dashboard', file: 'tools/WED/world_economy_dashboard.html' },
-            { name: 'Color Editor', file: 'tools/color_editor.html' },
-            { name: 'Plotly Symbol Viewer', file: 'tools/plotly_symbol_viewer.html' },
-            { name: 'CSV_Formatter', file: 'tools/csv_formatter_tool.html'},
-            { name: 'Excel_Column_Formatter', file: 'tools/excel_column_formatter.html'},
-            // Weitere Tools hier hinzufügen, z.B.
-            // { name: 'Tool 2', file: 'tools/tool2.html' }
+            { name: 'Code Saver', file: 'tools/code_saver.html', icon: '💾', category: 'Utilities' },
+            { name: 'CSV Manipulator v3', file: 'csv-manipulator-v3.html', icon: '📊', category: 'Data', badge: 'NEW' },
+            { name: 'CSV Formatter', file: 'tools/csv_formatter_tool.html', icon: '📋', category: 'Data' },
+            { name: 'Excel Column Formatter', file: 'tools/excel_column_formatter.html', icon: '📑', category: 'Data' },
+            { name: 'String Set', file: 'tools/string_set.html', icon: '📝', category: 'Text' },
+            { name: 'Prompt Formatter', file: 'tools/prompt_formatter.html', icon: '🤖', category: 'AI' },
+            { name: 'Markdown Viewer', file: 'tools/markdown_viewer.html', icon: '📄', category: 'Text' },
+            { name: 'Binance API Extractor', file: 'tools/binance_api_data_extractor.html', icon: '📈', category: 'API' },
+            { name: 'World Economy Dashboard', file: 'tools/WED/world_economy_dashboard.html', icon: '🌍', category: 'Data' },
+            { name: 'Color Editor', file: 'tools/color_editor.html', icon: '🎨', category: 'Design' },
+            { name: 'Plotly Symbol Viewer', file: 'tools/plotly_symbol_viewer.html', icon: '📊', category: 'Visualization' },
+            { name: 'Beautify Tools', file: 'https://beautifytools.com/', icon: '✨', category: 'External' },
+            { name: 'PlantUML Viewer', file: 'https://www.plantuml.com/plantuml/uml', icon: '🌱', category: 'External' },
         ];
 
+        // === DOM Elements ===
         const listEl = document.getElementById('tool-list');
         const frame = document.getElementById('tool-frame');
+        const searchInput = document.getElementById('search');
+        const loadingEl = document.querySelector('.loading');
 
-        // Funktion zum Laden und Anzeigen eines Tools im iframe
-        function loadTool(index) {
-            // Aktives Listenelement markieren
-            document.querySelectorAll('#tool-list li').forEach((li, i) => {
-                li.classList.toggle('active', i === index);
+        // === State ===
+        let currentToolIndex = 0;
+        let filteredTools = [...tools];
+
+        // === Functions ===
+        function groupToolsByCategory(toolList) {
+            const groups = {};
+            toolList.forEach((tool, index) => {
+                const category = tool.category || 'Uncategorized';
+                if (!groups[category]) {
+                    groups[category] = [];
+                }
+                groups[category].push({ ...tool, originalIndex: tools.indexOf(tool) });
             });
-            // Dateipfad setzen, damit das HTML im iframe angezeigt wird
-            frame.src = tools[index].file;
+            return groups;
         }
 
-        // Sidebar dynamisch mit den Tools befüllen
-        tools.forEach((tool, index) => {
-            const li = document.createElement('li');
-            li.textContent = tool.name; // Anzeigename
-            li.addEventListener('click', () => loadTool(index));
-            listEl.appendChild(li);
+        function renderToolList(toolList = tools) {
+            listEl.innerHTML = '';
+            const groups = groupToolsByCategory(toolList);
+            
+            // Sort categories
+            const sortedCategories = Object.keys(groups).sort();
+            
+            if (sortedCategories.length === 0) {
+                listEl.innerHTML = '<div class="no-results">Keine Tools gefunden</div>';
+                return;
+            }
+            
+            sortedCategories.forEach(category => {
+                const categoryTools = groups[category];
+                
+                // Create category container
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'category';
+                
+                // Category header
+                const header = document.createElement('div');
+                header.className = 'category-header';
+                header.innerHTML = `
+                    <span>${category}</span>
+                    <span class="category-count">${categoryTools.length}</span>
+                `;
+                categoryDiv.appendChild(header);
+                
+                // Tool items
+                categoryTools.forEach(tool => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <span class="tool-icon">${tool.icon || '📦'}</span>
+                        <span>${tool.name}</span>
+                        ${tool.badge ? `<span class="tool-badge">${tool.badge}</span>` : ''}
+                    `;
+                    li.addEventListener('click', () => loadTool(tool.originalIndex));
+                    li.setAttribute('data-index', tool.originalIndex);
+                    categoryDiv.appendChild(li);
+                });
+                
+                listEl.appendChild(categoryDiv);
+            });
+            
+            // Update active state
+            updateActiveState();
+        }
+
+        function loadTool(index) {
+            currentToolIndex = index;
+            
+            // Show loading state
+            loadingEl.style.display = 'block';
+            frame.style.display = 'none';
+            
+            // Update active state
+            updateActiveState();
+            
+            // Load tool
+            frame.src = tools[index].file;
+            
+            // Save to localStorage
+            localStorage.setItem('lastToolIndex', index);
+        }
+
+        function updateActiveState() {
+            document.querySelectorAll('#tool-list li').forEach(li => {
+                const index = parseInt(li.getAttribute('data-index'));
+                li.classList.toggle('active', index === currentToolIndex);
+            });
+        }
+
+        function filterTools(query) {
+            if (!query.trim()) {
+                filteredTools = [...tools];
+            } else {
+                const lowerQuery = query.toLowerCase();
+                filteredTools = tools.filter(tool => 
+                    tool.name.toLowerCase().includes(lowerQuery) ||
+                    (tool.category && tool.category.toLowerCase().includes(lowerQuery))
+                );
+            }
+            renderToolList(filteredTools);
+        }
+
+        // === Event Listeners ===
+        searchInput.addEventListener('input', (e) => {
+            filterTools(e.target.value);
         });
 
-        // Beim Start direkt das erste Tool laden
-        if (tools.length > 0) {
-            loadTool(0);
+        // Clear search on Escape
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                searchInput.value = '';
+                filterTools('');
+            }
+        });
+
+        // Handle iframe load
+        frame.addEventListener('load', () => {
+            loadingEl.style.display = 'none';
+            frame.style.display = 'block';
+        });
+
+        // === Initialize ===
+        // Render initial list
+        renderToolList();
+
+        // Load last used tool or first tool
+        const savedIndex = localStorage.getItem('lastToolIndex');
+        const startIndex = savedIndex ? parseInt(savedIndex) : 0;
+        if (tools[startIndex]) {
+            loadTool(startIndex);
         }
+
+        // Focus search on "/" key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === '/' && document.activeElement !== searchInput) {
+                e.preventDefault();
+                searchInput.focus();
+            }
+        });
     </script>
 </body>
 </html>
