@@ -3,169 +3,1211 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CSV Editor v2</title>
+  <title>CSV Manipulator v3</title>
   <style>
-    * { box-sizing: border-box; }
-    body { font-family: sans-serif; margin: 0; padding: 1rem; }
-    .container { max-width: 800px; margin: auto; display: flex; flex-direction: column; gap: 1rem; }
-    .controls, .action-select, .params { display: flex; flex-wrap: wrap; gap: .5rem; }
-    textarea { flex: 1 1 100%; height: 4rem; }
-    input, button, select, textarea { padding: .5rem; }
-    .preview table { width: 100%; border-collapse: collapse; }
-    .preview th, .preview td { border: 1px solid #ccc; padding: .3rem; }
-    @media (max-width: 600px) { .controls, .action-select, .params { flex-direction: column; } }
+    /* === 1. Reset/Base === */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a1a;
+      color: #f5f5f5;
+      font-size: 16px;
+      line-height: 1.5;
+      padding: 16px;
+    }
+
+    /* === 2. Layout === */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      margin-bottom: 8px;
+      color: #06fc99;
+    }
+
+    .header p {
+      color: #777;
+    }
+
+    .grid {
+      display: grid;
+      gap: 24px;
+      grid-template-columns: 1fr;
+    }
+
+    @media (min-width: 768px) {
+      .grid {
+        grid-template-columns: 1fr 1fr;
+      }
+      .full-width {
+        grid-column: 1 / -1;
+      }
+    }
+
+    /* === 3. Components === */
+    
+    /* Cards */
+    .card {
+      background: #2a2a2a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 24px;
+    }
+
+    .card-title {
+      font-size: 1.25rem;
+      margin-bottom: 16px;
+      color: #06fc99;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 12px 24px;
+      border-radius: 8px;
+      background: #06fc99;
+      color: #1a1a1a;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      min-height: 44px;
+      font-size: 16px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn:hover {
+      opacity: 0.8;
+    }
+
+    .btn:focus {
+      outline: 2px solid #06fc99;
+      outline-offset: 2px;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      background: #333;
+      color: #f5f5f5;
+      border: 1px solid #555;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    /* Inputs */
+    .input, .select, .textarea {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid #333;
+      border-radius: 6px;
+      background: #1a1a1a;
+      color: #f5f5f5;
+      font-size: 16px;
+      transition: all 0.2s ease;
+    }
+
+    .input:focus, .select:focus, .textarea:focus {
+      outline: none;
+      border-color: #06fc99;
+      box-shadow: 0 0 0 2px rgba(6, 252, 153, 0.2);
+    }
+
+    .textarea {
+      resize: vertical;
+      min-height: 120px;
+      font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+    }
+
+    /* Drop Zone */
+    .drop-zone {
+      border: 2px dashed #06fc99;
+      border-radius: 8px;
+      padding: 48px 32px;
+      text-align: center;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      background: rgba(6, 252, 153, 0.05);
+    }
+
+    .drop-zone.dragover {
+      background: rgba(6, 252, 153, 0.1);
+      transform: scale(1.01);
+    }
+
+    .drop-zone-icon {
+      font-size: 3rem;
+      margin-bottom: 16px;
+      opacity: 0.7;
+    }
+
+    /* Data Preview */
+    .data-preview {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 6px;
+      overflow: hidden;
+      margin-top: 16px;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    .data-table th {
+      background: #333;
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    .data-table td {
+      padding: 12px;
+      border-bottom: 1px solid #333;
+    }
+
+    .data-table tr:hover td {
+      background: rgba(6, 252, 153, 0.05);
+    }
+
+    /* Status Messages */
+    .status {
+      padding: 12px 16px;
+      border-radius: 6px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .status.success {
+      background: rgba(6, 252, 153, 0.1);
+      border: 1px solid rgba(6, 252, 153, 0.3);
+      color: #06fc99;
+    }
+
+    .status.error {
+      background: rgba(255, 82, 82, 0.1);
+      border: 1px solid rgba(255, 82, 82, 0.3);
+      color: #ff5252;
+    }
+
+    .status.info {
+      background: rgba(100, 181, 246, 0.1);
+      border: 1px solid rgba(100, 181, 246, 0.3);
+      color: #64b5f6;
+    }
+
+    /* Transform Options */
+    .transform-options {
+      display: grid;
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .option-group {
+      display: grid;
+      gap: 12px;
+    }
+
+    .checkbox-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-top: 8px;
+    }
+
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .checkbox-item input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      accent-color: #06fc99;
+    }
+
+    /* Stats Bar */
+    .stats-bar {
+      display: flex;
+      gap: 24px;
+      padding: 16px;
+      background: #333;
+      border-radius: 6px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: #777;
+      text-transform: uppercase;
+    }
+
+    .stat-value {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #06fc99;
+    }
+
+    /* Loading State */
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #333;
+      border-top-color: #06fc99;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .container {
+        padding: 0;
+      }
+      
+      .card {
+        padding: 16px;
+      }
+      
+      .btn-group {
+        flex-direction: column;
+      }
+      
+      .btn {
+        width: 100%;
+      }
+      
+      .stats-bar {
+        justify-content: space-between;
+      }
+    }
+
+    /* Utility Classes */
+    .hidden { display: none !important; }
+    .mt-16 { margin-top: 16px; }
+    .mb-16 { margin-bottom: 16px; }
+    .text-center { text-align: center; }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>CSV Editor v2</h1>
-    <div class="controls">
-      <label>CSV-Datei: <input type="file" id="fileInput" accept=".csv"></label>
-      <label>Oder CSV einfügen:<textarea id="pasteArea" placeholder="CSV hier einfügen..."></textarea></label>
-      <button id="loadBtn">Laden</button>
-    </div>
+    <!-- === Header === -->
+    <header class="header">
+      <h1>CSV Manipulator v3</h1>
+      <p>Professionelle CSV-Bearbeitung mit erweiterten Features</p>
+    </header>
 
-    <div class="action-select">
-      <label>Aktion:
-        <select id="actionType">
+    <!-- === Status Container === -->
+    <div id="statusContainer"></div>
+
+    <!-- === Main Grid === -->
+    <div class="grid">
+      <!-- === Input Section === -->
+      <div class="card">
+        <h2 class="card-title">1. CSV laden</h2>
+        
+        <!-- Drop Zone -->
+        <div class="drop-zone" id="dropZone" tabindex="0" role="button" aria-label="CSV-Datei hier ablegen oder klicken">
+          <div class="drop-zone-icon">📁</div>
+          <div>CSV-Datei hier ablegen</div>
+          <div style="color: #777; font-size: 14px; margin-top: 8px;">oder klicken zum Auswählen</div>
+          <input type="file" id="fileInput" accept=".csv,.txt" style="display: none;">
+        </div>
+
+        <!-- Alternative Input Methods -->
+        <div class="mt-16">
+          <button class="btn btn-secondary" id="pasteBtn" style="width: 100%;">
+            📋 Aus Zwischenablage einfügen
+          </button>
+        </div>
+
+        <div class="mt-16">
+          <details>
+            <summary style="cursor: pointer; color: #06fc99;">Oder direkt eingeben</summary>
+            <textarea 
+              id="directInput" 
+              class="textarea mt-16" 
+              placeholder="CSV-Daten hier eingeben...&#10;Name,Alter,Stadt&#10;Max,25,Berlin&#10;Lisa,30,München"
+            ></textarea>
+            <button class="btn mt-16" id="loadDirectBtn">Daten laden</button>
+          </details>
+        </div>
+
+        <!-- Delimiter Options -->
+        <div class="mt-16">
+          <label style="display: block; margin-bottom: 8px;">Trennzeichen:</label>
+          <select id="delimiter" class="select">
+            <option value="auto">Automatisch erkennen</option>
+            <option value=",">Komma (,)</option>
+            <option value=";">Semikolon (;)</option>
+            <option value="\t">Tab</option>
+            <option value="|">Pipe (|)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- === Transform Section === -->
+      <div class="card">
+        <h2 class="card-title">2. Transformationen</h2>
+        
+        <select id="actionType" class="select mb-16">
+          <option value="">-- Aktion wählen --</option>
           <option value="addColumn">Neue Spalte hinzufügen</option>
-          <option value="transform">Spaltenwerte modifizieren</option>
-          <option value="deleteColumn">Spalte löschen</option>
-          <option value="renameColumn">Spalte umbenennen</option>
+          <option value="transform">Spaltenwerte ändern</option>
+          <option value="filter">Zeilen filtern</option>
+          <option value="sort">Sortieren</option>
+          <option value="remove">Spalte entfernen</option>
         </select>
-      </label>
-    </div>
 
-    <div class="params" id="paramsContainer">
-      <div id="addColumnParams">
-        <input type="text" id="colHeader" placeholder="Spalten-Header">
-        <input type="number" id="colIndex" placeholder="Position (0-bas.)">
-        <input type="text" id="colDefault" placeholder="Standardwert">
-      </div>
-      <div id="transformParams" style="display:none;">
-        <label>Spalte:
-          <select id="transformColumn"></select>
-        </label>
-        <input type="text" id="transformString" placeholder="String zum Anfügen/Vorlansetzen">
-        <select id="transformMode">
-          <option value="append">Anfügen</option>
-          <option value="prepend">Voransetzen</option>
-        </select>
-      </div>
-      <div id="deleteColumnParams" style="display:none;">
-        <label>Spalte löschen:
-          <select id="deleteColumnSelect"></select>
-        </label>
-      </div>
-      <div id="renameColumnParams" style="display:none;">
-        <label>Spalte:
-          <select id="renameColumnSelect"></select>
-        </label>
-        <input type="text" id="renameColumnName" placeholder="Neuer Name">
-      </div>
-      <button id="execBtn">Ausführen</button>
-    </div>
+        <!-- Dynamic Transform Options -->
+        <div id="transformOptions" class="transform-options"></div>
 
-    <div class="preview">
-      <h2>Vorschau (10 Zeilen)</h2>
-      <table id="previewTable"></table>
+        <button class="btn mt-16" id="applyBtn" disabled style="width: 100%;">
+          ✨ Transformation anwenden
+        </button>
+      </div>
+
+      <!-- === Data Stats === -->
+      <div class="card full-width">
+        <h2 class="card-title">Daten-Übersicht</h2>
+        <div id="statsBar" class="stats-bar hidden">
+          <div class="stat-item">
+            <span class="stat-label">Zeilen</span>
+            <span class="stat-value" id="rowCount">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Spalten</span>
+            <span class="stat-value" id="colCount">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Größe</span>
+            <span class="stat-value" id="dataSize">0 KB</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- === Preview Section === -->
+      <div class="card full-width">
+        <h2 class="card-title">Vorschau</h2>
+        <div class="data-preview">
+          <div id="previewContainer" style="max-height: 400px; overflow: auto;">
+            <p class="text-center" style="padding: 48px; color: #777;">
+              Keine Daten geladen
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- === Export Section === -->
+      <div class="card full-width">
+        <h2 class="card-title">3. Exportieren</h2>
+        <div class="btn-group">
+          <button class="btn" id="exportCsvBtn" disabled>
+            💾 Als CSV
+          </button>
+          <button class="btn btn-secondary" id="exportJsonBtn" disabled>
+            📄 Als JSON
+          </button>
+          <button class="btn btn-secondary" id="copyResultBtn" disabled>
+            📋 In Zwischenablage
+          </button>
+        </div>
+      </div>
     </div>
-    <button id="exportBtn">Als CSV exportieren</button>
   </div>
 
   <script>
-    let data = [];
+    'use strict';
 
-    function parseCSV(text) {
-      return text.trim().split(/\r?\n/).map(r => r.split(','));
-    }
-    function serializeCSV(arr) {
-      return arr.map(r => r.join(',')).join('\n');
-    }
+    // === State Management ===
+    const state = {
+      data: [],
+      headers: [],
+      delimiter: ',',
+      originalData: null,
+      transformHistory: []
+    };
 
-    function renderPreview() {
-      const tbl = document.getElementById('previewTable'); tbl.innerHTML = '';
-      if (!data.length) return;
-      data.slice(0, 10).forEach((row, i) => {
-        const tr = document.createElement('tr');
-        row.forEach(cell => {
-          const el = i===0 ? document.createElement('th') : document.createElement('td');
-          el.textContent = cell; tr.appendChild(el);
-        }); tbl.appendChild(tr);
-      });
-      populateSelects();
-    }
+    // === DOM Elements ===
+    const elements = {
+      dropZone: document.getElementById('dropZone'),
+      fileInput: document.getElementById('fileInput'),
+      pasteBtn: document.getElementById('pasteBtn'),
+      directInput: document.getElementById('directInput'),
+      loadDirectBtn: document.getElementById('loadDirectBtn'),
+      delimiter: document.getElementById('delimiter'),
+      actionType: document.getElementById('actionType'),
+      transformOptions: document.getElementById('transformOptions'),
+      applyBtn: document.getElementById('applyBtn'),
+      previewContainer: document.getElementById('previewContainer'),
+      statusContainer: document.getElementById('statusContainer'),
+      statsBar: document.getElementById('statsBar'),
+      exportCsvBtn: document.getElementById('exportCsvBtn'),
+      exportJsonBtn: document.getElementById('exportJsonBtn'),
+      copyResultBtn: document.getElementById('copyResultBtn')
+    };
 
-    function loadCSV() {
-      const file = document.getElementById('fileInput').files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = e => { try{ data=parseCSV(e.target.result); renderPreview(); }catch{alert('Ungültiges CSV');}};
-        reader.onerror = ()=>alert('Lesefehler'); reader.readAsText(file,'UTF-8');
-      } else {
-        const txt = document.getElementById('pasteArea').value;
-        if (!txt.trim()) return alert('Keine Daten');
-        try{ data=parseCSV(txt); renderPreview(); } catch{alert('Ungültiges CSV');}
+    // === CSV Parser (Robust) ===
+    class CSVParser {
+      static parse(text, delimiter = 'auto') {
+        if (!text.trim()) return { headers: [], data: [] };
+        
+        // Auto-detect delimiter
+        if (delimiter === 'auto') {
+          delimiter = this.detectDelimiter(text);
+        }
+        
+        const lines = text.trim().split(/\r?\n/);
+        const result = [];
+        
+        for (let i = 0; i < lines.length; i++) {
+          const row = this.parseLine(lines[i], delimiter);
+          result.push(row);
+        }
+        
+        return {
+          headers: result[0] || [],
+          data: result.slice(1)
+        };
+      }
+      
+      static detectDelimiter(text) {
+        const delimiters = [',', ';', '\t', '|'];
+        const counts = {};
+        
+        // Count occurrences in first few lines
+        const sample = text.split(/\r?\n/).slice(0, 5).join('\n');
+        
+        delimiters.forEach(d => {
+          counts[d] = (sample.match(new RegExp(d, 'g')) || []).length;
+        });
+        
+        // Return delimiter with highest count
+        return Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
+      }
+      
+      static parseLine(line, delimiter) {
+        const result = [];
+        let current = '';
+        let inQuotes = false;
+        
+        for (let i = 0; i < line.length; i++) {
+          const char = line[i];
+          const nextChar = line[i + 1];
+          
+          if (char === '"') {
+            if (inQuotes && nextChar === '"') {
+              // Escaped quote
+              current += '"';
+              i++;
+            } else {
+              // Toggle quote mode
+              inQuotes = !inQuotes;
+            }
+          } else if (char === delimiter && !inQuotes) {
+            // End of field
+            result.push(current.trim());
+            current = '';
+          } else {
+            current += char;
+          }
+        }
+        
+        // Don't forget last field
+        result.push(current.trim());
+        
+        return result;
+      }
+      
+      static serialize(headers, data, delimiter = ',') {
+        const rows = [headers, ...data];
+        
+        return rows.map(row => 
+          row.map(cell => {
+            const value = String(cell || '');
+            // Quote if contains delimiter, quotes, or newlines
+            if (value.includes(delimiter) || value.includes('"') || value.includes('\n')) {
+              return `"${value.replace(/"/g, '""')}"`;
+            }
+            return value;
+          }).join(delimiter)
+        ).join('\n');
       }
     }
 
-    function populateSelects() {
-      const headers = data[0]||[];
-      ['transformColumn','deleteColumnSelect','renameColumnSelect'].forEach(id=>{
-        const sel = document.getElementById(id); sel.innerHTML='';
-        headers.forEach((h,i)=>{
-          const opt=document.createElement('option'); opt.value=i; opt.textContent=`${i}: ${h}`; sel.appendChild(opt);
-        });
+    // === File Handling ===
+    function setupFileHandling() {
+      // Click to select
+      elements.dropZone.addEventListener('click', () => elements.fileInput.click());
+      
+      // File input change
+      elements.fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) processFile(file);
+      });
+      
+      // Drag and drop
+      elements.dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        elements.dropZone.classList.add('dragover');
+      });
+      
+      elements.dropZone.addEventListener('dragleave', () => {
+        elements.dropZone.classList.remove('dragover');
+      });
+      
+      elements.dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        elements.dropZone.classList.remove('dragover');
+        
+        const file = e.dataTransfer.files[0];
+        if (file) processFile(file);
+      });
+      
+      // Paste button
+      elements.pasteBtn.addEventListener('click', async () => {
+        try {
+          const text = await navigator.clipboard.readText();
+          if (text) {
+            loadCSV(text);
+            showStatus('Daten aus Zwischenablage eingefügt', 'success');
+          } else {
+            showStatus('Zwischenablage ist leer', 'error');
+          }
+        } catch (err) {
+          showStatus('Fehler beim Zugriff auf Zwischenablage', 'error');
+        }
+      });
+      
+      // Direct input
+      elements.loadDirectBtn.addEventListener('click', () => {
+        const text = elements.directInput.value;
+        if (text.trim()) {
+          loadCSV(text);
+          showStatus('Daten geladen', 'success');
+        } else {
+          showStatus('Bitte Daten eingeben', 'error');
+        }
+      });
+      
+      // Delimiter change
+      elements.delimiter.addEventListener('change', () => {
+        if (state.originalData) {
+          loadCSV(state.originalData);
+        }
       });
     }
 
-    function addColumn() {
-      const h=document.getElementById('colHeader').value.trim();
-      const i=parseInt(document.getElementById('colIndex').value,10);
-      const v=document.getElementById('colDefault').value;
-      if(!h||isNaN(i)||i<0) return alert('Ungültige Eingabe');
-      data[0].splice(i,0,h); for(let r=1;r<data.length;r++) data[r].splice(i,0,v);
-    }
-    function transformColumn() {
-      const i=parseInt(document.getElementById('transformColumn').value,10);
-      const s=document.getElementById('transformString').value;
-      const m=document.getElementById('transformMode').value;
-      if(!s) return alert('Kein String');
-      for(let r=1;r<data.length;r++){ const o=data[r][i]||''; data[r][i]=m==='prepend'?s+o:o+s; }
-    }
-    function deleteColumn() {
-      const i=parseInt(document.getElementById('deleteColumnSelect').value,10);
-      if(isNaN(i)) return;
-      data.forEach(row=>row.splice(i,1));
-    }
-    function renameColumn() {
-      const i=parseInt(document.getElementById('renameColumnSelect').value,10);
-      const n=document.getElementById('renameColumnName').value.trim();
-      if(!n) return alert('Kein Name');
-      data[0][i]=n;
+    // === Process File ===
+    async function processFile(file) {
+      if (!file.name.match(/\.(csv|txt)$/i)) {
+        showStatus('Nur CSV oder TXT Dateien erlaubt', 'error');
+        return;
+      }
+      
+      try {
+        const text = await file.text();
+        state.originalData = text;
+        loadCSV(text);
+        showStatus(`${file.name} erfolgreich geladen`, 'success');
+      } catch (err) {
+        showStatus('Fehler beim Lesen der Datei', 'error');
+        console.error(err);
+      }
     }
 
-    function executeAction() {
-      if(!data.length) return alert('CSV laden');
-      const act=document.getElementById('actionType').value;
-      ({ addColumn, transform:transformColumn, deleteColumn, renameColumn })[act]();
-      renderPreview();
+    // === Load CSV Data ===
+    function loadCSV(text) {
+      try {
+        const delimiter = elements.delimiter.value;
+        const result = CSVParser.parse(text, delimiter);
+        
+        if (result.headers.length === 0) {
+          showStatus('Keine gültigen Daten gefunden', 'error');
+          return;
+        }
+        
+        // State komplett zurücksetzen
+        state.headers = result.headers;
+        state.data = result.data;
+        state.delimiter = delimiter === 'auto' ? CSVParser.detectDelimiter(text) : delimiter;
+        state.transformHistory = [];
+        
+        // UI zurücksetzen
+        elements.actionType.value = '';
+        elements.transformOptions.innerHTML = '';
+        elements.applyBtn.disabled = true;
+        
+        updatePreview();
+        updateStats();
+        enableControls();
+        
+        showStatus(`${state.data.length} Zeilen geladen`, 'success');
+      } catch (err) {
+        showStatus('Fehler beim Parsen der CSV-Daten', 'error');
+        console.error(err);
+      }
     }
 
-    function exportCSV() {
-      if(!data.length) return alert('Keine Daten');
-      const blob=new Blob([serializeCSV(data)],{type:'text/csv'});
-      const url=URL.createObjectURL(blob);
-      const a=document.createElement('a'); a.href=url; a.download='edited_v2.csv'; a.click(); URL.revokeObjectURL(url);
-    }
-
-    document.getElementById('loadBtn').addEventListener('click',loadCSV);
-    document.getElementById('actionType').addEventListener('change',e=>{
-      const types=['addColumn','transform','deleteColumn','renameColumn'];
-      types.forEach(t=>document.getElementById(t+'Params').style.display = e.target.value===t?'flex':'none');
+    // === Transform Options ===
+    elements.actionType.addEventListener('change', () => {
+      const action = elements.actionType.value;
+      elements.transformOptions.innerHTML = '';
+      
+      // Button nur aktivieren wenn Aktion gewählt UND Daten geladen
+      elements.applyBtn.disabled = !action || state.headers.length === 0;
+      
+      if (!action) return;
+      
+      switch (action) {
+        case 'addColumn':
+          renderAddColumnOptions();
+          break;
+        case 'transform':
+          renderTransformOptions();
+          break;
+        case 'filter':
+          renderFilterOptions();
+          break;
+        case 'sort':
+          renderSortOptions();
+          break;
+        case 'remove':
+          renderRemoveOptions();
+          break;
+      }
     });
-    document.getElementById('execBtn').addEventListener('click',executeAction);
-    document.getElementById('exportBtn').addEventListener('click',exportCSV);
+
+    // === Render Transform UIs ===
+    function renderAddColumnOptions() {
+      // Prüfen ob Daten geladen sind
+      if (state.headers.length === 0) {
+        elements.transformOptions.innerHTML = `
+          <div class="option-group">
+            <p style="color: #777;">Bitte erst CSV-Daten laden</p>
+          </div>
+        `;
+        return;
+      }
+      
+      elements.transformOptions.innerHTML = `
+        <div class="option-group">
+          <input type="text" id="newColName" class="input" placeholder="Spaltenname">
+          <input type="number" id="newColPosition" class="input" placeholder="Position (0 = Anfang)" min="0">
+          <input type="text" id="newColDefault" class="input" placeholder="Standardwert (optional)">
+        </div>
+      `;
+    }
+
+    function renderTransformOptions() {
+      // Prüfen ob Daten geladen sind
+      if (state.headers.length === 0) {
+        elements.transformOptions.innerHTML = `
+          <div class="option-group">
+            <p style="color: #777;">Bitte erst CSV-Daten laden</p>
+          </div>
+        `;
+        return;
+      }
+      
+      const columnOptions = state.headers.map((h, i) => 
+        `<option value="${i}">${h}</option>`
+      ).join('');
+      
+      elements.transformOptions.innerHTML = `
+        <div class="option-group">
+          <select id="transformColumn" class="select">
+            <option value="">-- Spalte wählen --</option>
+            ${columnOptions}
+          </select>
+          
+          <select id="transformType" class="select">
+            <option value="append">Text anhängen</option>
+            <option value="prepend">Text voranstellen</option>
+            <option value="replace">Ersetzen</option>
+            <option value="uppercase">Großschreibung</option>
+            <option value="lowercase">Kleinschreibung</option>
+            <option value="trim">Leerzeichen entfernen</option>
+            <option value="number">Als Zahl formatieren</option>
+          </select>
+          
+          <div id="transformParams"></div>
+        </div>
+      `;
+      
+      document.getElementById('transformType').addEventListener('change', (e) => {
+        const type = e.target.value;
+        const paramsDiv = document.getElementById('transformParams');
+        
+        if (['append', 'prepend'].includes(type)) {
+          paramsDiv.innerHTML = `
+            <input type="text" id="transformText" class="input mt-16" placeholder="Text">
+          `;
+        } else if (type === 'replace') {
+          paramsDiv.innerHTML = `
+            <input type="text" id="replaceFrom" class="input mt-16" placeholder="Suchen">
+            <input type="text" id="replaceTo" class="input mt-16" placeholder="Ersetzen mit">
+          `;
+        } else {
+          paramsDiv.innerHTML = '';
+        }
+      });
+    }
+
+    function renderFilterOptions() {
+      // Prüfen ob Daten geladen sind
+      if (state.headers.length === 0) {
+        elements.transformOptions.innerHTML = `
+          <div class="option-group">
+            <p style="color: #777;">Bitte erst CSV-Daten laden</p>
+          </div>
+        `;
+        return;
+      }
+      
+      const columnOptions = state.headers.map((h, i) => 
+        `<option value="${i}">${h}</option>`
+      ).join('');
+      
+      elements.transformOptions.innerHTML = `
+        <div class="option-group">
+          <select id="filterColumn" class="select">
+            <option value="">-- Spalte wählen --</option>
+            ${columnOptions}
+          </select>
+          
+          <select id="filterType" class="select">
+            <option value="equals">Gleich</option>
+            <option value="contains">Enthält</option>
+            <option value="startsWith">Beginnt mit</option>
+            <option value="endsWith">Endet mit</option>
+            <option value="empty">Ist leer</option>
+            <option value="notEmpty">Ist nicht leer</option>
+          </select>
+          
+          <input type="text" id="filterValue" class="input mt-16" placeholder="Wert (bei Bedarf)">
+        </div>
+      `;
+    }
+
+    function renderSortOptions() {
+      // Prüfen ob Daten geladen sind
+      if (state.headers.length === 0) {
+        elements.transformOptions.innerHTML = `
+          <div class="option-group">
+            <p style="color: #777;">Bitte erst CSV-Daten laden</p>
+          </div>
+        `;
+        return;
+      }
+      
+      const columnOptions = state.headers.map((h, i) => 
+        `<option value="${i}">${h}</option>`
+      ).join('');
+      
+      elements.transformOptions.innerHTML = `
+        <div class="option-group">
+          <select id="sortColumn" class="select">
+            <option value="">-- Spalte wählen --</option>
+            ${columnOptions}
+          </select>
+          
+          <select id="sortOrder" class="select">
+            <option value="asc">Aufsteigend (A-Z, 0-9)</option>
+            <option value="desc">Absteigend (Z-A, 9-0)</option>
+          </select>
+          
+          <div class="checkbox-item mt-16">
+            <input type="checkbox" id="sortNumeric">
+            <label for="sortNumeric">Als Zahlen sortieren</label>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderRemoveOptions() {
+      // Prüfen ob Daten geladen sind
+      if (state.headers.length === 0) {
+        elements.transformOptions.innerHTML = `
+          <div class="option-group">
+            <p style="color: #777;">Bitte erst CSV-Daten laden</p>
+          </div>
+        `;
+        return;
+      }
+      
+      const columnOptions = state.headers.map((h, i) => 
+        `<div class="checkbox-item">
+          <input type="checkbox" id="remove_${i}" value="${i}">
+          <label for="remove_${i}">${h}</label>
+        </div>`
+      ).join('');
+      
+      elements.transformOptions.innerHTML = `
+        <div class="option-group">
+          <p style="margin-bottom: 12px;">Spalten zum Entfernen auswählen:</p>
+          <div class="checkbox-group">
+            ${columnOptions}
+          </div>
+        </div>
+      `;
+    }
+
+    // === Apply Transformations ===
+    elements.applyBtn.addEventListener('click', () => {
+      const action = elements.actionType.value;
+      
+      try {
+        switch (action) {
+          case 'addColumn':
+            applyAddColumn();
+            break;
+          case 'transform':
+            applyTransform();
+            break;
+          case 'filter':
+            applyFilter();
+            break;
+          case 'sort':
+            applySort();
+            break;
+          case 'remove':
+            applyRemove();
+            break;
+        }
+        
+        updatePreview();
+        updateStats();
+        showStatus('Transformation angewendet', 'success');
+      } catch (err) {
+        showStatus(`Fehler: ${err.message}`, 'error');
+      }
+    });
+
+    // === Transformation Functions ===
+    function applyAddColumn() {
+      const name = document.getElementById('newColName').value.trim();
+      const position = parseInt(document.getElementById('newColPosition').value) || state.headers.length;
+      const defaultValue = document.getElementById('newColDefault').value || '';
+      
+      if (!name) throw new Error('Spaltenname erforderlich');
+      
+      // Add to headers
+      state.headers.splice(position, 0, name);
+      
+      // Add to data
+      state.data.forEach(row => {
+        row.splice(position, 0, defaultValue);
+      });
+    }
+
+    function applyTransform() {
+      const colIndex = parseInt(document.getElementById('transformColumn').value);
+      const type = document.getElementById('transformType').value;
+      
+      if (isNaN(colIndex)) throw new Error('Spalte wählen');
+      
+      state.data.forEach(row => {
+        let value = row[colIndex] || '';
+        
+        switch (type) {
+          case 'append':
+            const appendText = document.getElementById('transformText').value;
+            row[colIndex] = value + appendText;
+            break;
+          case 'prepend':
+            const prependText = document.getElementById('transformText').value;
+            row[colIndex] = prependText + value;
+            break;
+          case 'replace':
+            const from = document.getElementById('replaceFrom').value;
+            const to = document.getElementById('replaceTo').value;
+            row[colIndex] = value.replace(new RegExp(from, 'g'), to);
+            break;
+          case 'uppercase':
+            row[colIndex] = value.toUpperCase();
+            break;
+          case 'lowercase':
+            row[colIndex] = value.toLowerCase();
+            break;
+          case 'trim':
+            row[colIndex] = value.trim();
+            break;
+          case 'number':
+            const num = parseFloat(value.replace(/[^\d.-]/g, ''));
+            row[colIndex] = isNaN(num) ? '0' : num.toString();
+            break;
+        }
+      });
+    }
+
+    function applyFilter() {
+      const colIndex = parseInt(document.getElementById('filterColumn').value);
+      const type = document.getElementById('filterType').value;
+      const filterValue = document.getElementById('filterValue').value;
+      
+      if (isNaN(colIndex)) throw new Error('Spalte wählen');
+      
+      state.data = state.data.filter(row => {
+        const value = row[colIndex] || '';
+        
+        switch (type) {
+          case 'equals':
+            return value === filterValue;
+          case 'contains':
+            return value.includes(filterValue);
+          case 'startsWith':
+            return value.startsWith(filterValue);
+          case 'endsWith':
+            return value.endsWith(filterValue);
+          case 'empty':
+            return !value.trim();
+          case 'notEmpty':
+            return value.trim() !== '';
+          default:
+            return true;
+        }
+      });
+    }
+
+    function applySort() {
+      const colIndex = parseInt(document.getElementById('sortColumn').value);
+      const order = document.getElementById('sortOrder').value;
+      const numeric = document.getElementById('sortNumeric').checked;
+      
+      if (isNaN(colIndex)) throw new Error('Spalte wählen');
+      
+      state.data.sort((a, b) => {
+        let valA = a[colIndex] || '';
+        let valB = b[colIndex] || '';
+        
+        if (numeric) {
+          valA = parseFloat(valA) || 0;
+          valB = parseFloat(valB) || 0;
+        }
+        
+        if (valA < valB) return order === 'asc' ? -1 : 1;
+        if (valA > valB) return order === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+
+    function applyRemove() {
+      const checkboxes = elements.transformOptions.querySelectorAll('input[type="checkbox"]:checked');
+      const toRemove = Array.from(checkboxes).map(cb => parseInt(cb.value)).sort((a, b) => b - a);
+      
+      if (toRemove.length === 0) throw new Error('Mindestens eine Spalte auswählen');
+      if (toRemove.length === state.headers.length) throw new Error('Kann nicht alle Spalten entfernen');
+      
+      // Remove from headers and data (reverse order to maintain indices)
+      toRemove.forEach(index => {
+        state.headers.splice(index, 1);
+        state.data.forEach(row => row.splice(index, 1));
+      });
+    }
+
+    // === Preview Update ===
+    function updatePreview() {
+      if (state.headers.length === 0) {
+        elements.previewContainer.innerHTML = `
+          <p class="text-center" style="padding: 48px; color: #777;">
+            Keine Daten geladen
+          </p>
+        `;
+        return;
+      }
+      
+      const previewRows = Math.min(100, state.data.length);
+      
+      let html = '<table class="data-table"><thead><tr>';
+      
+      // Headers
+      state.headers.forEach(header => {
+        html += `<th>${escapeHtml(header)}</th>`;
+      });
+      html += '</tr></thead><tbody>';
+      
+      // Data rows
+      for (let i = 0; i < previewRows; i++) {
+        html += '<tr>';
+        state.data[i].forEach(cell => {
+          html += `<td>${escapeHtml(cell || '')}</td>`;
+        });
+        html += '</tr>';
+      }
+      
+      html += '</tbody></table>';
+      
+      if (state.data.length > previewRows) {
+        html += `<p class="text-center" style="padding: 16px; color: #777;">
+          ... und ${state.data.length - previewRows} weitere Zeilen
+        </p>`;
+      }
+      
+      elements.previewContainer.innerHTML = html;
+    }
+
+    // === Stats Update ===
+    function updateStats() {
+      if (state.headers.length === 0) {
+        elements.statsBar.classList.add('hidden');
+        return;
+      }
+      
+      elements.statsBar.classList.remove('hidden');
+      
+      document.getElementById('rowCount').textContent = state.data.length.toLocaleString();
+      document.getElementById('colCount').textContent = state.headers.length;
+      
+      // Calculate approximate size
+      const csv = CSVParser.serialize(state.headers, state.data, state.delimiter);
+      const sizeKB = (new Blob([csv]).size / 1024).toFixed(1);
+      document.getElementById('dataSize').textContent = `${sizeKB} KB`;
+    }
+
+    // === Export Functions ===
+    elements.exportCsvBtn.addEventListener('click', () => {
+      const csv = CSVParser.serialize(state.headers, state.data, state.delimiter);
+      downloadFile(csv, 'export.csv', 'text/csv');
+      showStatus('CSV exportiert', 'success');
+    });
+
+    elements.exportJsonBtn.addEventListener('click', () => {
+      const jsonData = state.data.map(row => {
+        const obj = {};
+        state.headers.forEach((header, i) => {
+          obj[header] = row[i] || '';
+        });
+        return obj;
+      });
+      
+      const json = JSON.stringify(jsonData, null, 2);
+      downloadFile(json, 'export.json', 'application/json');
+      showStatus('JSON exportiert', 'success');
+    });
+
+    elements.copyResultBtn.addEventListener('click', async () => {
+      const csv = CSVParser.serialize(state.headers, state.data, state.delimiter);
+      
+      try {
+        await navigator.clipboard.writeText(csv);
+        showStatus('In Zwischenablage kopiert', 'success');
+      } catch (err) {
+        showStatus('Kopieren fehlgeschlagen', 'error');
+      }
+    });
+
+    // === Helper Functions ===
+    function showStatus(message, type = 'info') {
+      const status = document.createElement('div');
+      status.className = `status ${type}`;
+      
+      const icon = {
+        success: '✅',
+        error: '❌',
+        info: 'ℹ️'
+      }[type];
+      
+      status.innerHTML = `<span>${icon}</span><span>${message}</span>`;
+      
+      elements.statusContainer.innerHTML = '';
+      elements.statusContainer.appendChild(status);
+      
+      setTimeout(() => {
+        status.remove();
+      }, 5000);
+    }
+
+    function escapeHtml(text) {
+      const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      };
+      return text.replace(/[&<>"']/g, m => map[m]);
+    }
+
+    function downloadFile(content, filename, type) {
+      const blob = new Blob([content], { type });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function enableControls() {
+      elements.exportCsvBtn.disabled = false;
+      elements.exportJsonBtn.disabled = false;
+      elements.copyResultBtn.disabled = false;
+      elements.actionType.disabled = false;
+      
+      // Wenn eine Aktion ausgewählt ist, Apply-Button aktivieren
+      if (elements.actionType.value) {
+        elements.applyBtn.disabled = false;
+      }
+    }
+
+    // === Initialize ===
+    setupFileHandling();
   </script>
 </body>
 </html>
