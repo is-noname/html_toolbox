@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CSV/XLS Formatter</title>
+    <style>
+        /* === 1. Reset/Base === */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 16px;
+            line-height: 1.5;
+            background: #1a1a1a;
+            color: #f5f5f5;
+            padding: 16px;
+        }
+
+        /* === 2. Layout === */
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .grid {
+            display: grid;
+            gap: 24px;
+            grid-template-columns: 1fr;
+        }
+
+        @media (min-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .full-width {
+                grid-column: 1 / -1;
+            }
+        }
+
+        /* === 3. Components === */
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 32px;
+            text-align: center;
+            color: #06fc99;
+        }
+
+        .section {
+            background: #2a2a2a;
+            border-radius: 8px;
+            padding: 24px;
+            border: 1px solid #333;
+        }
+
+        .section h2 {
+            font-size: 1.5rem;
+            margin-bottom: 16px;
+            color: #06fc99;
+        }
+
+        /* Drop Zone Styles - aus Standard: Drag & Drop Zones */
+        .drop-zone {
+            border: 2px dashed #06fc99;
+            border-radius: 8px;
+            padding: 32px;
+            text-align: center;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .drop-zone.dragover {
+            background: rgba(6, 252, 153, 0.1);
+        }
+
+        .drop-zone:focus {
+            outline: 2px solid #06fc99;
+        }
+
+        /* Button Styles - aus Standard: Buttons */
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            background: #06fc99;
+            color: #1a1a1a;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-height: 44px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .btn:hover {
+            opacity: 0.8;
+        }
+
+        .btn:focus {
+            outline: 2px solid #06fc99;
+            outline-offset: 2px;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Text Areas - erweitert aus Standard: Input Fields */
+        .textarea {
+            padding: 12px 16px;
+            border: 1px solid #333;
+            border-radius: 6px;
+            background: #1a1a1a;
+            color: #f5f5f5;
+            font-size: 16px;
+            width: 100%;
+            resize: vertical;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
+        }
+
+        .textarea:focus {
+            outline: none;
+            border-color: #06fc99;
+            box-shadow: 0 0 0 2px rgba(6, 252, 153, 0.2);
+        }
+
+        /* Checkbox List */
+        .checkbox-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 16px;
+            background: #1a1a1a;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            min-height: 44px; /* Touch Target */
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+            accent-color: #06fc99;
+        }
+
+        .checkbox-item label {
+            cursor: pointer;
+            flex: 1;
+            font-size: 16px;
+        }
+
+        /* Preview Area */
+        .preview {
+            background: #2a2a2a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 16px;
+            max-height: 150px;
+            overflow: auto;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+        }
+
+        /* Result Area */
+        .result-container {
+            position: relative;
+        }
+
+        .result-textarea {
+            min-height: 200px;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            padding: 8px 16px;
+            font-size: 14px;
+            min-height: 36px;
+        }
+
+        /* === 4. Utilities === */
+        .mb-16 { margin-bottom: 16px; }
+        .mb-24 { margin-bottom: 24px; }
+        .text-center { text-align: center; }
+
+        /* Status Messages */
+        .status {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            font-weight: 500;
+        }
+
+        .status.success {
+            background: rgba(6, 252, 153, 0.1);
+            border: 1px solid #06fc99;
+            color: #06fc99;
+        }
+
+        .status.error {
+            background: rgba(255, 59, 59, 0.1);
+            border: 1px solid #ff3b3b;
+            color: #ff3b3b;
+        }
+
+        /* === 5. Mobile Optimierung === */
+        @media (max-width: 767px) {
+            .container {
+                padding: 0;
+            }
+            
+            .section {
+                padding: 16px;
+            }
+            
+            .copy-btn {
+                position: static;
+                margin-top: 12px;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>CSV/XLS Formatter</h1>
+        
+        <div class="grid">
+            <!-- === Data Input Section === -->
+            <div class="section">
+                <h2>1. Daten eingeben</h2>
+                
+                <!-- Drop Zone für Drag & Drop -->
+                <div class="drop-zone" id="dropZone" tabindex="0" role="button" aria-label="Dateien hier ablegen oder klicken">
+                    <div>📄 Datei hier ablegen</div>
+                    <div>oder klicken zum Auswählen</div>
+                    <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" style="display: none;">
+                </div>
+                
+                <!-- Button für Zwischenablage -->
+                <button class="btn mb-16" id="pasteBtn" style="width: 100%; margin-top: 16px;">
+                    📋 Aus Zwischenablage einfügen
+                </button>
+                
+                <!-- Status Messages -->
+                <div id="statusMsg"></div>
+                
+                <!-- Data Preview -->
+                <div>
+                    <h3 style="margin-bottom: 8px; color: #06fc99;">Daten-Vorschau:</h3>
+                    <div class="preview" id="dataPreview">Keine Daten geladen...</div>
+                </div>
+            </div>
+
+            <!-- === Column Selection === -->
+            <div class="section">
+                <h2>2. Spalten auswählen</h2>
+                <div class="checkbox-list" id="columnList">
+                    <div class="text-center" style="color: #777; padding: 24px;">
+                        Lade zuerst Daten...
+                    </div>
+                </div>
+            </div>
+
+            <!-- === Output Section === -->
+            <div class="section full-width">
+                <h2>3. Formatierte Ausgabe</h2>
+                <div class="result-container">
+                    <textarea 
+                        class="textarea result-textarea" 
+                        id="resultOutput" 
+                        placeholder="Formatierte Daten erscheinen hier..."
+                        spellcheck="false"
+                    ></textarea>
+                    <button class="btn copy-btn" id="copyBtn" disabled>
+                        📄 Kopieren
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        'use strict';
+
+        // === Global State ===
+        let currentData = [];
+        let currentHeaders = [];
+
+        // === DOM Elements ===
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const pasteBtn = document.getElementById('pasteBtn');
+        const statusMsg = document.getElementById('statusMsg');
+        const dataPreview = document.getElementById('dataPreview');
+        const columnList = document.getElementById('columnList');
+        const resultOutput = document.getElementById('resultOutput');
+        const copyBtn = document.getElementById('copyBtn');
+
+        // === Event Listeners Setup ===
+        function initEventListeners() {
+            // File Input Events
+            dropZone.addEventListener('click', () => fileInput.click());
+            dropZone.addEventListener('dragover', handleDragOver);
+            dropZone.addEventListener('dragleave', handleDragLeave);
+            dropZone.addEventListener('drop', handleDrop);
+            fileInput.addEventListener('change', handleFileSelect);
+            
+            // Paste Button
+            pasteBtn.addEventListener('click', handlePaste);
+            
+            // Copy Button
+            copyBtn.addEventListener('click', handleCopy);
+            
+            // Column Checkboxes (delegated)
+            columnList.addEventListener('change', handleColumnChange);
+        }
+
+        // === File Handling Functions ===
+        function handleDragOver(e) {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                processFile(files[0]);
+            }
+        }
+
+        function handleFileSelect(e) {
+            if (e.target.files.length > 0) {
+                processFile(e.target.files[0]);
+            }
+        }
+
+        async function handlePaste() {
+            try {
+                const text = await navigator.clipboard.readText();
+                if (text.trim()) {
+                    parseCSVText(text);
+                    showStatus('Daten aus Zwischenablage eingefügt', 'success');
+                } else {
+                    showStatus('Zwischenablage ist leer', 'error');
+                }
+            } catch (err) {
+                showStatus('Fehler beim Zugriff auf Zwischenablage', 'error');
+            }
+        }
+
+        // === File Processing ===
+        async function processFile(file) {
+            const fileName = file.name.toLowerCase();
+            
+            try {
+                if (fileName.endsWith('.csv')) {
+                    const text = await file.text();
+                    parseCSVText(text);
+                } else if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
+                    showStatus('Excel-Dateien werden verarbeitet...', 'success');
+                    // Hier würde normalerweise eine Excel-Parsing Library verwendet
+                    // Für diese Demo fokussieren wir auf CSV
+                    showStatus('Excel-Support noch nicht implementiert. Bitte CSV verwenden.', 'error');
+                    return;
+                } else {
+                    showStatus('Unsupported file type. Nur CSV/XLS/XLSX erlaubt.', 'error');
+                    return;
+                }
+                
+                showStatus(`✅ ${file.name} erfolgreich geladen`, 'success');
+            } catch (err) {
+                showStatus('Fehler beim Verarbeiten der Datei', 'error');
+                console.error(err);
+            }
+        }
+
+        // === CSV Parsing ===
+        function parseCSVText(text) {
+            const lines = text.trim().split('\n');
+            if (lines.length < 2) {
+                showStatus('CSV benötigt mindestens Header und eine Datenzeile', 'error');
+                return;
+            }
+
+            // Parse Headers (erste Zeile)
+            currentHeaders = parseCSVLine(lines[0]);
+            
+            // Parse Data (restliche Zeilen)
+            currentData = [];
+            for (let i = 1; i < lines.length; i++) {
+                if (lines[i].trim()) {
+                    currentData.push(parseCSVLine(lines[i]));
+                }
+            }
+
+            updatePreview();
+            updateColumnList();
+        }
+
+        function parseCSVLine(line) {
+            // Einfacher CSV-Parser (für komplexere CSVs müsste man eine Library verwenden)
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                
+                if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current.trim());
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            
+            result.push(current.trim());
+            return result;
+        }
+
+        // === UI Update Functions ===
+        function updatePreview() {
+            if (currentData.length === 0) {
+                dataPreview.textContent = 'Keine Daten geladen...';
+                return;
+            }
+
+            // Zeige ersten paar Zeilen als Preview
+            let preview = 'Headers: ' + currentHeaders.join(', ') + '\n\n';
+            preview += 'Erste Zeilen:\n';
+            
+            const previewRows = Math.min(3, currentData.length);
+            for (let i = 0; i < previewRows; i++) {
+                preview += currentData[i].join(', ') + '\n';
+            }
+            
+            if (currentData.length > 3) {
+                preview += `... und ${currentData.length - 3} weitere Zeilen`;
+            }
+            
+            dataPreview.textContent = preview;
+        }
+
+        function updateColumnList() {
+            if (currentHeaders.length === 0) {
+                columnList.innerHTML = '<div class="text-center" style="color: #777; padding: 24px;">Lade zuerst Daten...</div>';
+                return;
+            }
+
+            let html = '';
+            currentHeaders.forEach((header, index) => {
+                html += `
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="col_${index}" value="${index}">
+                        <label for="col_${index}">${header}</label>
+                    </div>
+                `;
+            });
+            
+            columnList.innerHTML = html;
+        }
+
+        // === Column Selection Handling ===
+        function handleColumnChange() {
+            const checkedColumns = [];
+            const checkboxes = columnList.querySelectorAll('input[type="checkbox"]:checked');
+            
+            checkboxes.forEach(cb => {
+                checkedColumns.push(parseInt(cb.value));
+            });
+
+            if (checkedColumns.length === 0) {
+                resultOutput.value = '';
+                copyBtn.disabled = true;
+                return;
+            }
+
+            // Sammle alle Werte der ausgewählten Spalten
+            const allValues = [];
+            
+            currentData.forEach(row => {
+                checkedColumns.forEach(colIndex => {
+                    const value = row[colIndex] || '';
+                    if (value.trim()) { // Nur nicht-leere Werte
+                        allValues.push(value.trim());
+                    }
+                });
+            });
+
+            // Alle Werte nebeneinander mit Komma getrennt
+            resultOutput.value = allValues.join(', ');
+            copyBtn.disabled = false;
+        }
+
+        // === Copy Function ===
+        async function handleCopy() {
+            try {
+                await navigator.clipboard.writeText(resultOutput.value);
+                showStatus('✅ In Zwischenablage kopiert', 'success');
+                
+                // Visual Feedback
+                const originalText = copyBtn.textContent;
+                copyBtn.textContent = '✅ Kopiert!';
+                setTimeout(() => {
+                    copyBtn.textContent = originalText;
+                }, 2000);
+            } catch (err) {
+                showStatus('Fehler beim Kopieren', 'error');
+            }
+        }
+
+        // === Status Messages ===
+        function showStatus(message, type = 'success') {
+            statusMsg.innerHTML = `<div class="status ${type}">${message}</div>`;
+            
+            setTimeout(() => {
+                statusMsg.innerHTML = '';
+            }, 5000);
+        }
+
+        // === Initialize App ===
+        initEventListeners();
+    </script>
+</body>
+</html>
