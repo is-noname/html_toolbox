@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sachmerkmale Vergleichstool</title>
+    <style>
+        /* === 1. Reset/Base === */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 16px;
+            line-height: 1.5;
+            background: #1a1a1a;
+            color: #f5f5f5;
+            padding: 16px;
+        }
+
+        /* === 2. Layout === */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 8px;
+            color: #06fc99;
+        }
+
+        .header p {
+            color: #777;
+        }
+
+        .input-grid {
+            display: grid;
+            gap: 24px;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            margin-bottom: 32px;
+        }
+
+        .comparison-section {
+            margin-top: 32px;
+        }
+
+        /* === 3. Components === */
+        
+        /* Input Cards */
+        .input-card {
+            background: #2a2a2a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            position: relative;
+        }
+
+        .input-card h3 {
+            font-size: 1.2rem;
+            margin-bottom: 16px;
+            color: #06fc99;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .input-number {
+            background: #06fc99;
+            color: #1a1a1a;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        /* Drop Zone */
+        .drop-zone {
+            border: 2px dashed #06fc99;
+            border-radius: 8px;
+            padding: 24px;
+            text-align: center;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            background: rgba(6, 252, 153, 0.05);
+            margin-bottom: 12px;
+        }
+
+        .drop-zone.dragover {
+            background: rgba(6, 252, 153, 0.1);
+            transform: scale(1.01);
+        }
+
+        .drop-zone.has-data {
+            border-color: #06fc99;
+            background: rgba(6, 252, 153, 0.1);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            background: #06fc99;
+            color: #1a1a1a;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-height: 36px;
+            font-size: 14px;
+            font-weight: 600;
+            width: 100%;
+            margin-bottom: 8px;
+        }
+
+        .btn:hover { opacity: 0.8; }
+        .btn:focus { outline: 2px solid #06fc99; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .btn-secondary {
+            background: #333;
+            color: #f5f5f5;
+            border: 1px solid #555;
+        }
+
+        /* Column Selection */
+        .column-selection {
+            margin-top: 16px;
+            padding: 16px;
+            background: #1a1a1a;
+            border-radius: 6px;
+            display: none;
+        }
+
+        .column-selection.visible {
+            display: block;
+        }
+
+        .column-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .select {
+            padding: 8px 12px;
+            border: 1px solid #333;
+            border-radius: 4px;
+            background: #2a2a2a;
+            color: #f5f5f5;
+            font-size: 14px;
+        }
+
+        .select:focus {
+            outline: none;
+            border-color: #06fc99;
+        }
+
+        /* Data Preview */
+        .data-preview {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 12px;
+            max-height: 120px;
+            overflow-y: auto;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 12px;
+            display: none;
+        }
+
+        .data-preview.visible {
+            display: block;
+        }
+
+        /* Comparison Results */
+        .comparison-results {
+            background: #2a2a2a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 24px;
+            margin-top: 24px;
+        }
+
+        .comparison-results h2 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #06fc99;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: flex;
+            gap: 24px;
+            padding: 16px;
+            background: #333;
+            border-radius: 6px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #777;
+            text-transform: uppercase;
+        }
+
+        .stat-value {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #06fc99;
+        }
+
+        /* Difference Tables */
+        .diff-section {
+            margin-bottom: 32px;
+        }
+
+        .diff-section h3 {
+            font-size: 1.2rem;
+            margin-bottom: 16px;
+            color: #f5f5f5;
+            padding: 8px 0;
+            border-bottom: 1px solid #333;
+        }
+
+        .diff-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #1a1a1a;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .diff-table th {
+            background: #333;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .diff-table td {
+            padding: 12px;
+            border-bottom: 1px solid #333;
+            font-size: 14px;
+        }
+
+        .diff-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .diff-table tr:hover {
+            background: rgba(6, 252, 153, 0.05);
+        }
+
+        /* Difference Indicators */
+        .diff-value {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: 'SF Mono', Monaco, monospace;
+        }
+
+        .diff-value.different {
+            background: rgba(255, 193, 7, 0.2);
+            border: 1px solid rgba(255, 193, 7, 0.4);
+        }
+
+        .diff-value.missing {
+            background: rgba(255, 82, 82, 0.2);
+            border: 1px solid rgba(255, 82, 82, 0.4);
+            color: #ff5252;
+        }
+
+        .diff-value.same {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid rgba(76, 175, 80, 0.4);
+        }
+
+        /* Status Messages */
+        .status {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            font-weight: 500;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .status.success {
+            background: rgba(6, 252, 153, 0.1);
+            border: 1px solid rgba(6, 252, 153, 0.3);
+            color: #06fc99;
+        }
+
+        .status.error {
+            background: rgba(255, 82, 82, 0.1);
+            border: 1px solid rgba(255, 82, 82, 0.3);
+            color: #ff5252;
+        }
+
+        /* === 4. Utilities === */
+        .hidden { display: none !important; }
+        .empty-state {
+            text-align: center;
+            color: #777;
+            padding: 48px 24px;
+            font-style: italic;
+        }
+
+        /* === 5. Mobile Optimierung === */
+        @media (max-width: 768px) {
+            .container { padding: 0; }
+            .input-grid { grid-template-columns: 1fr; }
+            .column-grid { grid-template-columns: 1fr; }
+            .stats-bar { justify-content: space-between; }
+            .diff-table { font-size: 12px; }
+            .diff-table th, .diff-table td { padding: 8px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- === Header === -->
+        <header class="header">
+            <h1>Sachmerkmale Vergleichstool</h1>
+            <p>Vergleiche bis zu 4 Sachmerkmalslisten und identifiziere Unterschiede</p>
+        </header>
+
+        <!-- === Status Container === -->
+        <div id="statusContainer"></div>
+
+        <!-- === Input Cards === -->
+        <div class="input-grid" id="inputGrid">
+            <!-- Input cards werden dynamisch generiert -->
+        </div>
+
+        <!-- === Global Actions === -->
+        <div style="text-align: center; margin-bottom: 24px;">
+            <button class="btn" id="compareBtn" disabled style="max-width: 300px;">
+                🔍 Vergleich starten
+            </button>
+        </div>
+
+        <!-- === Comparison Results === -->
+        <div class="comparison-results hidden" id="comparisonResults">
+            <h2>Vergleichsergebnisse</h2>
+            
+            <!-- Stats Overview -->
+            <div class="stats-bar" id="statsBar">
+                <!-- Stats werden dynamisch gefüllt -->
+            </div>
+
+            <!-- Different Values -->
+            <div class="diff-section">
+                <h3>🔶 Sachmerkmale mit unterschiedlichen Werten</h3>
+                <div id="differentValues">
+                    <div class="empty-state">Keine Unterschiede gefunden</div>
+                </div>
+            </div>
+
+            <!-- Missing Features -->
+            <div class="diff-section">
+                <h3>❌ Fehlende Sachmerkmale</h3>
+                <div id="missingFeatures">
+                    <div class="empty-state">Keine fehlenden Sachmerkmale</div>
+                </div>
+            </div>
+
+            <!-- Identical Features -->
+            <div class="diff-section">
+                <h3>✅ Identische Sachmerkmale</h3>
+                <div id="identicalFeatures">
+                    <div class="empty-state">Keine identischen Sachmerkmale</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        'use strict';
+
+        // === Global State ===
+        const state = {
+            inputs: Array(4).fill(null).map(() => ({
+                data: new Map(), // Map: feature -> value
+                rawData: null,
+                headers: [],
+                name: ''
+            })),
+            comparisonResults: null
+        };
+
+        // === CSV Parser Class === 
+        class CSVParser {
+            static parse(text) {
+                const lines = text.trim().split(/\r?\n/);
+                const result = [];
+                
+                for (let line of lines) {
+                    if (line.trim()) {
+                        result.push(this.parseLine(line));
+                    }
+                }
+                
+                return result;
+            }
+            
+            static parseLine(line) {
+                const result = [];
+                let current = '';
+                let inQuotes = false;
+                
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
+                    
+                    if (char === '"') {
+                        inQuotes = !inQuotes;
+                    } else if ((char === ',' || char === ';') && !inQuotes) {
+                        result.push(current.trim());
+                        current = '';
+                    } else {
+                        current += char;
+                    }
+                }
+                
+                result.push(current.trim());
+                return result;
+            }
+        }
+
+        // === Initialize App ===
+        function initializeApp() {
+            createInputCards();
+            document.getElementById('compareBtn').addEventListener('click', performComparison);
+        }
+
+        // === Create Input Cards ===
+        function createInputCards() {
+            const grid = document.getElementById('inputGrid');
+            
+            for (let i = 0; i < 4; i++) {
+                const card = createInputCard(i);
+                grid.appendChild(card);
+            }
+        }
+
+        function createInputCard(index) {
+            const card = document.createElement('div');
+            card.className = 'input-card';
+            card.innerHTML = `
+                <h3>
+                    <span class="input-number">${index + 1}</span>
+                    Auszug ${index + 1}
+                </h3>
+                
+                <!-- Drop Zone -->
+                <div class="drop-zone" data-index="${index}">
+                    <div>📄 Datei hier ablegen</div>
+                    <div style="font-size: 12px; color: #777; margin-top: 4px;">CSV oder Excel</div>
+                    <input type="file" accept=".csv,.xlsx,.xls" style="display: none;">
+                </div>
+                
+                <!-- Paste Button -->
+                <button class="btn btn-secondary" data-action="paste" data-index="${index}">
+                    📋 Aus Zwischenablage
+                </button>
+                
+                <!-- Clear Button -->
+                <button class="btn btn-secondary" data-action="clear" data-index="${index}" style="display: none;">
+                    🗑️ Löschen
+                </button>
+                
+                <!-- Column Selection -->
+                <div class="column-selection" data-index="${index}">
+                    <label style="font-size: 12px; color: #777;">Spalten auswählen:</label>
+                    <div class="column-grid">
+                        <select class="select" data-type="feature">
+                            <option value="">-- Sachmerkmale --</option>
+                        </select>
+                        <select class="select" data-type="value">
+                            <option value="">-- Werte --</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Data Preview -->
+                <div class="data-preview" data-index="${index}">
+                    <div style="color: #777;">Vorschau erscheint hier...</div>
+                </div>
+            `;
+            
+            setupCardEvents(card, index);
+            return card;
+        }
+
+        // === Setup Event Listeners for Cards ===
+        function setupCardEvents(card, index) {
+            const dropZone = card.querySelector('.drop-zone');
+            const fileInput = dropZone.querySelector('input[type="file"]');
+            
+            // === File Handling ===
+            dropZone.addEventListener('click', () => fileInput.click());
+            
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            });
+            
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('dragover');
+            });
+            
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+                const file = e.dataTransfer.files[0];
+                if (file) processFile(file, index);
+            });
+            
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) processFile(file, index);
+            });
+            
+            // === Button Actions ===
+            card.addEventListener('click', (e) => {
+                const action = e.target.dataset.action;
+                const cardIndex = parseInt(e.target.dataset.index);
+                
+                if (action === 'paste') {
+                    pasteFromClipboard(cardIndex);
+                } else if (action === 'clear') {
+                    clearInputData(cardIndex);
+                }
+            });
+            
+            // === Column Selection ===
+            const selects = card.querySelectorAll('.select');
+            selects.forEach(select => {
+                select.addEventListener('change', () => updateColumnSelection(index));
+            });
+        }
+
+        // === File Processing ===
+        async function processFile(file, index) {
+            try {
+                let text;
+                
+                if (file.name.toLowerCase().endsWith('.csv')) {
+                    text = await file.text();
+                } else {
+                    showStatus('Excel-Support noch nicht implementiert. Bitte CSV verwenden.', 'error');
+                    return;
+                }
+                
+                const rows = CSVParser.parse(text);
+                if (rows.length < 2) {
+                    showStatus('Datei muss mindestens Header und eine Datenzeile enthalten', 'error');
+                    return;
+                }
+                
+                // Store raw data and setup column selection
+                state.inputs[index].rawData = rows;
+                state.inputs[index].headers = rows[0];
+                state.inputs[index].name = file.name;
+                
+                setupColumnSelection(index);
+                showStatus(`${file.name} erfolgreich geladen`, 'success');
+                
+            } catch (err) {
+                showStatus('Fehler beim Verarbeiten der Datei', 'error');
+                console.error(err);
+            }
+        }
+
+        // === Paste from Clipboard ===
+        async function pasteFromClipboard(index) {
+            try {
+                const text = await navigator.clipboard.readText();
+                if (!text.trim()) {
+                    showStatus('Zwischenablage ist leer', 'error');
+                    return;
+                }
+                
+                const rows = CSVParser.parse(text);
+                if (rows.length < 2) {
+                    showStatus('Daten müssen mindestens 2 Zeilen enthalten', 'error');
+                    return;
+                }
+                
+                // Store data
+                state.inputs[index].rawData = rows;
+                state.inputs[index].headers = rows[0];
+                state.inputs[index].name = `Zwischenablage ${index + 1}`;
+                
+                setupColumnSelection(index);
+                showStatus('Daten aus Zwischenablage eingefügt', 'success');
+                
+            } catch (err) {
+                showStatus('Fehler beim Zugriff auf Zwischenablage', 'error');
+            }
+        }
+
+        // === Setup Column Selection ===
+        function setupColumnSelection(index) {
+            const card = document.querySelector(`[data-index="${index}"].column-selection`);
+            const featureSelect = card.querySelector('[data-type="feature"]');
+            const valueSelect = card.querySelector('[data-type="value"]');
+            
+            // Clear previous options
+            featureSelect.innerHTML = '<option value="">-- Sachmerkmale --</option>';
+            valueSelect.innerHTML = '<option value="">-- Werte --</option>';
+            
+            // Add column options
+            state.inputs[index].headers.forEach((header, i) => {
+                featureSelect.innerHTML += `<option value="${i}">${header}</option>`;
+                valueSelect.innerHTML += `<option value="${i}">${header}</option>`;
+            });
+            
+            // Show column selection and update UI
+            card.classList.add('visible');
+            updateCardUI(index);
+        }
+
+        // === Update Column Selection ===
+        function updateColumnSelection(index) {
+            const card = document.querySelector(`[data-index="${index}"].column-selection`);
+            const featureColIndex = parseInt(card.querySelector('[data-type="feature"]').value);
+            const valueColIndex = parseInt(card.querySelector('[data-type="value"]').value);
+            
+            if (isNaN(featureColIndex) || isNaN(valueColIndex)) {
+                return;
+            }
+            
+            // Create feature-value map
+            const featureMap = new Map();
+            const rows = state.inputs[index].rawData.slice(1); // Skip header
+            
+            rows.forEach(row => {
+                const feature = row[featureColIndex]?.trim();
+                const value = row[valueColIndex]?.trim();
+                
+                if (feature && value) {
+                    featureMap.set(feature, value);
+                }
+            });
+            
+            state.inputs[index].data = featureMap;
+            updateDataPreview(index);
+            updateCompareButton();
+        }
+
+        // === Update Data Preview ===
+        function updateDataPreview(index) {
+            const preview = document.querySelector(`[data-index="${index}"].data-preview`);
+            const data = state.inputs[index].data;
+            
+            if (data.size === 0) {
+                preview.innerHTML = '<div style="color: #777;">Keine Daten verfügbar</div>';
+                return;
+            }
+            
+            let html = `<div style="color: #06fc99; margin-bottom: 8px;">${data.size} Sachmerkmale:</div>`;
+            
+            let count = 0;
+            for (let [feature, value] of data) {
+                if (count >= 5) {
+                    html += '<div style="color: #777;">...</div>';
+                    break;
+                }
+                html += `<div>${feature}: ${value}</div>`;
+                count++;
+            }
+            
+            preview.innerHTML = html;
+            preview.classList.add('visible');
+            updateCardUI(index);
+        }
+
+        // === Update Card UI State ===
+        function updateCardUI(index) {
+            const card = document.querySelectorAll('.input-card')[index];
+            const dropZone = card.querySelector('.drop-zone');
+            const clearBtn = card.querySelector('[data-action="clear"]');
+            
+            const hasData = state.inputs[index].data.size > 0;
+            
+            if (hasData) {
+                dropZone.classList.add('has-data');
+                dropZone.innerHTML = `
+                    <div>✅ ${state.inputs[index].name}</div>
+                    <div style="font-size: 12px; color: #777;">${state.inputs[index].data.size} Sachmerkmale</div>
+                `;
+                clearBtn.style.display = 'block';
+            } else {
+                dropZone.classList.remove('has-data');
+                clearBtn.style.display = 'none';
+            }
+        }
+
+        // === Clear Input Data ===
+        function clearInputData(index) {
+            state.inputs[index].data.clear();
+            state.inputs[index].rawData = null;
+            state.inputs[index].headers = [];
+            state.inputs[index].name = '';
+            
+            // Reset UI
+            const card = document.querySelectorAll('.input-card')[index];
+            const dropZone = card.querySelector('.drop-zone');
+            const columnSelection = card.querySelector('.column-selection');
+            const preview = card.querySelector('.data-preview');
+            const clearBtn = card.querySelector('[data-action="clear"]');
+            
+            dropZone.classList.remove('has-data');
+            dropZone.innerHTML = `
+                <div>📄 Datei hier ablegen</div>
+                <div style="font-size: 12px; color: #777; margin-top: 4px;">CSV oder Excel</div>
+            `;
+            
+            columnSelection.classList.remove('visible');
+            preview.classList.remove('visible');
+            clearBtn.style.display = 'none';
+            
+            updateCompareButton();
+            hideComparisonResults();
+        }
+
+        // === Update Compare Button ===
+        function updateCompareButton() {
+            const validInputs = state.inputs.filter(input => input.data.size > 0).length;
+            const compareBtn = document.getElementById('compareBtn');
+            
+            compareBtn.disabled = validInputs < 2;
+            compareBtn.textContent = validInputs < 2 
+                ? `🔍 Mindestens 2 Auszüge erforderlich (${validInputs}/4)`
+                : `🔍 ${validInputs} Auszüge vergleichen`;
+        }
+
+        // === Perform Comparison ===
+        function performComparison() {
+            const validInputs = state.inputs.filter(input => input.data.size > 0);
+            
+            if (validInputs.length < 2) {
+                showStatus('Mindestens 2 Auszüge erforderlich', 'error');
+                return;
+            }
+            
+            // Collect all features
+            const allFeatures = new Set();
+            validInputs.forEach(input => {
+                input.data.forEach((value, feature) => {
+                    allFeatures.add(feature);
+                });
+            });
+            
+            // Analyze differences
+            const results = {
+                identical: [],     // Features with same values across all inputs
+                different: [],     // Features with different values
+                missing: []        // Features missing in some inputs
+            };
+            
+            for (let feature of allFeatures) {
+                const values = validInputs.map(input => input.data.get(feature) || null);
+                const uniqueValues = new Set(values.filter(v => v !== null));
+                const missingCount = values.filter(v => v === null).length;
+                
+                if (missingCount > 0) {
+                    // Some inputs are missing this feature
+                    results.missing.push({
+                        feature,
+                        values: validInputs.map((input, i) => ({
+                            name: input.name,
+                            value: input.data.get(feature) || '❌ Fehlt',
+                            missing: !input.data.has(feature)
+                        }))
+                    });
+                } else if (uniqueValues.size === 1) {
+                    // All inputs have the same value
+                    results.identical.push({
+                        feature,
+                        value: Array.from(uniqueValues)[0],
+                        count: validInputs.length
+                    });
+                } else {
+                    // Different values across inputs
+                    results.different.push({
+                        feature,
+                        values: validInputs.map(input => ({
+                            name: input.name,
+                            value: input.data.get(feature)
+                        }))
+                    });
+                }
+            }
+            
+            state.comparisonResults = results;
+            displayComparisonResults(validInputs);
+            showStatus('Vergleich abgeschlossen', 'success');
+        }
+
+        // === Display Comparison Results ===
+        function displayComparisonResults(validInputs) {
+            const resultsContainer = document.getElementById('comparisonResults');
+            const results = state.comparisonResults;
+            
+            // Update stats
+            updateStatsBar(validInputs, results);
+            
+            // Update different values
+            updateDifferentValues(results.different, validInputs);
+            
+            // Update missing features  
+            updateMissingFeatures(results.missing, validInputs);
+            
+            // Update identical features
+            updateIdenticalFeatures(results.identical);
+            
+            // Show results
+            resultsContainer.classList.remove('hidden');
+            resultsContainer.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // === Update Stats Bar ===
+        function updateStatsBar(validInputs, results) {
+            const statsBar = document.getElementById('statsBar');
+            
+            statsBar.innerHTML = `
+                <div class="stat-item">
+                    <span class="stat-label">Verglichene Auszüge</span>
+                    <span class="stat-value">${validInputs.length}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Unterschiedliche Werte</span>
+                    <span class="stat-value">${results.different.length}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Fehlende Sachmerkmale</span>
+                    <span class="stat-value">${results.missing.length}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Identische Werte</span>
+                    <span class="stat-value">${results.identical.length}</span>
+                </div>
+            `;
+        }
+
+        // === Update Different Values ===
+        function updateDifferentValues(different, validInputs) {
+            const container = document.getElementById('differentValues');
+            
+            if (different.length === 0) {
+                container.innerHTML = '<div class="empty-state">Keine unterschiedlichen Werte gefunden</div>';
+                return;
+            }
+            
+            let html = `
+                <table class="diff-table">
+                    <thead>
+                        <tr>
+                            <th>Sachmerkmal</th>
+                            ${validInputs.map(input => `<th>${input.name}</th>`).join('')}
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            different.forEach(item => {
+                html += `<tr>
+                    <td><strong>${item.feature}</strong></td>
+                    ${item.values.map(v => `
+                        <td><span class="diff-value different">${v.value}</span></td>
+                    `).join('')}
+                </tr>`;
+            });
+            
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        // === Update Missing Features ===
+        function updateMissingFeatures(missing, validInputs) {
+            const container = document.getElementById('missingFeatures');
+            
+            if (missing.length === 0) {
+                container.innerHTML = '<div class="empty-state">Keine fehlenden Sachmerkmale</div>';
+                return;
+            }
+            
+            let html = `
+                <table class="diff-table">
+                    <thead>
+                        <tr>
+                            <th>Sachmerkmal</th>
+                            ${validInputs.map(input => `<th>${input.name}</th>`).join('')}
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            missing.forEach(item => {
+                html += `<tr>
+                    <td><strong>${item.feature}</strong></td>
+                    ${item.values.map(v => `
+                        <td><span class="diff-value ${v.missing ? 'missing' : 'same'}">${v.value}</span></td>
+                    `).join('')}
+                </tr>`;
+            });
+            
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        // === Update Identical Features ===
+        function updateIdenticalFeatures(identical) {
+            const container = document.getElementById('identicalFeatures');
+            
+            if (identical.length === 0) {
+                container.innerHTML = '<div class="empty-state">Keine identischen Sachmerkmale</div>';
+                return;
+            }
+            
+            let html = `
+                <table class="diff-table">
+                    <thead>
+                        <tr>
+                            <th>Sachmerkmal</th>
+                            <th>Wert</th>
+                            <th>In allen Auszügen</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            identical.forEach(item => {
+                html += `<tr>
+                    <td><strong>${item.feature}</strong></td>
+                    <td><span class="diff-value same">${item.value}</span></td>
+                    <td>✅ ${item.count} Auszüge</td>
+                </tr>`;
+            });
+            
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        // === Hide Comparison Results ===
+        function hideComparisonResults() {
+            document.getElementById('comparisonResults').classList.add('hidden');
+        }
+
+        // === Status Messages ===
+        function showStatus(message, type = 'success') {
+            const container = document.getElementById('statusContainer');
+            const status = document.createElement('div');
+            status.className = `status ${type}`;
+            
+            const icon = {
+                success: '✅',
+                error: '❌'
+            }[type];
+            
+            status.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
+            
+            container.innerHTML = '';
+            container.appendChild(status);
+            
+            setTimeout(() => {
+                status.remove();
+            }, 5000);
+        }
+
+        // === Initialize on Page Load ===
+        initializeApp();
+    </script>
+</body>
+</html>
