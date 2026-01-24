@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR-Code-Generator</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #121212; /* Dark background */
+            color: #e0e0e0; /* Light text */
+        }
+        .container {
+            background-color: #1e1e1e; /* Darker container */
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            text-align: center;
+            max-width: 90%;
+            width: 400px;
+        }
+        .tab-container {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            justify-content: center;
+        }
+        .tab-button {
+            background-color: #2c2c2c;
+            color: #aaa;
+            border: 1px solid #444;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-height: 44px;
+        }
+        .tab-button.active {
+            background-color: #06FC99;
+            color: #000;
+            border-color: #06FC99;
+            font-weight: bold;
+        }
+        .tab-button:hover:not(.active) {
+            background-color: #3c3c3c;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #444;
+            background-color: #2c2c2c;
+            color: #e0e0e0;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+        button {
+            background-color: #06FC99;
+            color: #000;
+            border: none;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: filter 0.2s;
+        }
+        button:hover {
+            filter: brightness(90%);
+        }
+        #output-section {
+             /* The container itself is the main element now */
+        }
+        #save-area {
+            padding: 2rem; /* Add padding to the area to be saved */
+            background-color: #1e1e1e; /* Match container background */
+        }
+        #qrcode {
+            margin: 1.5rem auto;
+            display: flex;
+            justify-content: center;
+            background-color: #fff; /* Ensure QR code background is white for scanning */
+            padding: 1rem;
+            border-radius: 6px;
+            width: fit-content;
+        }
+        #wallet-name-output {
+            font-size: 1.25rem;
+            font-weight: bold;
+        }
+        #wallet-address-output {
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: #aaa;
+            word-wrap: break-word;
+        }
+        .hidden {
+            display: none;
+        }
+        .button-group {
+            margin-top: 1.5rem;
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+        #back-button, #back-button-text {
+            background: none;
+            border: 1px solid #444;
+            color: #aaa;
+        }
+        textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #444;
+            background-color: #2c2c2c;
+            color: #e0e0e0;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 1rem;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            min-height: 120px;
+            resize: vertical;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="input-section" class="container">
+        <h1>QR-Code Generator</h1>
+
+        <!-- Tab Navigation -->
+        <div class="tab-container">
+            <button class="tab-button active" data-tab="wallet">Wallets</button>
+            <button class="tab-button" data-tab="text">Text</button>
+        </div>
+
+        <!-- Wallet Tab Content -->
+        <div id="wallet-tab" class="tab-content active">
+            <form id="qr-form">
+                <input type="text" id="wallet-name" placeholder="Wallet-Name" required>
+                <input type="text" id="wallet-address-input" placeholder="Wallet-Adresse" required>
+                <button type="submit">QR-Code generieren</button>
+            </form>
+        </div>
+
+        <!-- Text Tab Content -->
+        <div id="text-tab" class="tab-content">
+            <form id="text-form">
+                <textarea id="text-input" placeholder="Text hier einfügen..." required></textarea>
+                <button type="submit">QR-Code generieren</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Wallet Output Section -->
+    <div id="output-section" class="container hidden">
+        <div id="save-area">
+            <h2 id="wallet-name-output"></h2>
+            <div id="qrcode"></div>
+            <p id="wallet-address-output"></p>
+        </div>
+        <div class="button-group">
+            <button id="save-button">Als Bild speichern</button>
+            <button id="back-button">Zurück</button>
+        </div>
+    </div>
+
+    <!-- Text Output Section -->
+    <div id="text-output-section" class="container hidden">
+        <div id="text-save-area">
+            <h2>Text-QR-Code</h2>
+            <div id="text-qrcode"></div>
+        </div>
+        <div class="button-group">
+            <button id="text-save-button">Als Bild speichern</button>
+            <button id="back-button-text">Zurück</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/davidshimjs-qrcodejs@0.0.2/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script>
+        // Tab switching functionality
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const targetTab = button.getAttribute('data-tab');
+
+                // Remove active class from all buttons and contents
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                tabContents.forEach(content => content.classList.remove('active'));
+
+                // Add active class to clicked button and corresponding content
+                button.classList.add('active');
+                document.getElementById(`${targetTab}-tab`).classList.add('active');
+            });
+        });
+
+        // Wallet functionality
+        const inputSection = document.getElementById('input-section');
+        const outputSection = document.getElementById('output-section');
+        const qrForm = document.getElementById('qr-form');
+        const backButton = document.getElementById('back-button');
+        const saveButton = document.getElementById('save-button');
+        const qrcodeContainer = document.getElementById('qrcode');
+        const walletNameInput = document.getElementById('wallet-name');
+
+        // Text functionality
+        const textOutputSection = document.getElementById('text-output-section');
+        const textForm = document.getElementById('text-form');
+        const backButtonText = document.getElementById('back-button-text');
+        const textSaveButton = document.getElementById('text-save-button');
+        const textQrcodeContainer = document.getElementById('text-qrcode');
+        const textInput = document.getElementById('text-input');
+
+        let qrcodeInstance = null;
+        let textQrcodeInstance = null;
+
+        // Wallet QR generation
+        qrForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const walletName = walletNameInput.value;
+            const walletAddress = document.getElementById('wallet-address-input').value;
+
+            if (!walletName || !walletAddress) {
+                return;
+            }
+
+            // Clear previous QR code canvas if it exists
+            qrcodeContainer.innerHTML = '';
+
+            // Re-create the QR code. The library appends a canvas/img.
+            qrcodeInstance = new QRCode(qrcodeContainer, {
+                text: walletAddress,
+                width: 256,
+                height: 256,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+
+            // Output anzeigen
+            document.getElementById('wallet-name-output').textContent = walletName;
+            document.getElementById('wallet-address-output').textContent = walletAddress;
+
+            inputSection.classList.add('hidden');
+            outputSection.classList.remove('hidden');
+        });
+
+        backButton.addEventListener('click', () => {
+            outputSection.classList.add('hidden');
+            inputSection.classList.remove('hidden');
+        });
+
+        // Text QR generation
+        textForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const text = textInput.value;
+
+            if (!text) {
+                return;
+            }
+
+            // Clear previous QR code canvas if it exists
+            textQrcodeContainer.innerHTML = '';
+
+            // Create the QR code
+            textQrcodeInstance = new QRCode(textQrcodeContainer, {
+                text: text,
+                width: 256,
+                height: 256,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+
+            inputSection.classList.add('hidden');
+            textOutputSection.classList.remove('hidden');
+        });
+
+        backButtonText.addEventListener('click', () => {
+            textOutputSection.classList.add('hidden');
+            inputSection.classList.remove('hidden');
+        });
+
+        // Save wallet QR as image
+        saveButton.addEventListener('click', () => {
+            const saveArea = document.getElementById('save-area');
+            const walletName = walletNameInput.value.trim().replace(/\s+/g, '_');
+            const filename = walletName ? `${walletName}_QR.png` : 'wallet_QR.png';
+
+            html2canvas(saveArea, {
+                backgroundColor: '#ffffff', // Explicitly set background to white for export
+                onclone: (doc) => {
+                    const clonedSaveArea = doc.getElementById('save-area');
+                    clonedSaveArea.style.backgroundColor = '#ffffff';
+
+                    const nameOutput = doc.getElementById('wallet-name-output');
+                    nameOutput.style.color = '#000000';
+
+                    const addressOutput = doc.getElementById('wallet-address-output');
+                    addressOutput.style.color = '#000000';
+                }
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.href = canvas.toDataURL('image/png');
+                link.download = filename;
+                link.click();
+            });
+        });
+
+        // Save text QR as image
+        textSaveButton.addEventListener('click', () => {
+            const saveArea = document.getElementById('text-save-area');
+            const filename = 'text_QR.png';
+
+            html2canvas(saveArea, {
+                backgroundColor: '#ffffff',
+                onclone: (doc) => {
+                    const clonedSaveArea = doc.getElementById('text-save-area');
+                    clonedSaveArea.style.backgroundColor = '#ffffff';
+
+                    const heading = clonedSaveArea.querySelector('h2');
+                    heading.style.color = '#000000';
+                }
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.href = canvas.toDataURL('image/png');
+                link.download = filename;
+                link.click();
+            });
+        });
+    </script>
+
+</body>
+</html>

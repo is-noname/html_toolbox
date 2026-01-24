@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prusa Mini+ Parameter Rechner</title>
+    <style>
+        /* === Dark Mode Theme === */
+        :root {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2a2a2a;
+            --bg-hover: #333;
+            --text-primary: #f5f5f5;
+            --text-secondary: #999;
+            --accent: #06fc99;
+            --border: #333;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: var(--accent);
+            margin-bottom: 8px;
+            font-size: 1.75rem;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            font-size: 0.9rem;
+        }
+
+        /* === Warning Banner === */
+        .warning-banner {
+            background: linear-gradient(135deg, #ff9800, #ff5722);
+            color: #fff;
+            padding: 16px 20px;
+            border-radius: 8px;
+            margin-bottom: 32px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+            border: 2px solid #ff5722;
+            box-shadow: 0 4px 12px rgba(255, 87, 34, 0.3);
+        }
+
+        .warning-banner .icon {
+            font-size: 1.5rem;
+        }
+
+        .warning-banner .text {
+            flex: 1;
+        }
+
+        /* === Selection Area === */
+        .selection-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .select-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .select-group label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        select {
+            padding: 12px 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-height: 44px;
+        }
+
+        select:hover {
+            border-color: var(--accent);
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(6, 252, 153, 0.2);
+        }
+
+        /* === Results Area === */
+        .results {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .category {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .category-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--accent);
+        }
+
+        .param-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .param-item {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .param-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .param-value-wrapper {
+            display: flex;
+            gap: 8px;
+        }
+
+        .param-value {
+            flex: 1;
+            padding: 10px 12px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+        }
+
+        .copy-btn {
+            padding: 10px 16px;
+            background: var(--accent);
+            color: var(--bg-primary);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+            min-height: 44px;
+        }
+
+        .copy-btn:hover {
+            background: #05e089;
+            transform: translateY(-1px);
+        }
+
+        .copy-btn:active {
+            transform: translateY(0);
+        }
+
+        .copy-btn.copied {
+            background: #4CAF50;
+        }
+
+        /* === Responsive === */
+        @media (max-width: 640px) {
+            .selection-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .param-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* === Info Badge === */
+        .info-badge {
+            display: inline-block;
+            background: var(--bg-hover);
+            color: var(--text-secondary);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🖨️ Prusa Mini+ Parameter Rechner</h1>
+        <div class="subtitle">Optimierte Druckparameter für OrcaSlicer</div>
+
+        <!-- Warning Banner -->
+        <div class="warning-banner">
+            <div class="icon">⚠️</div>
+            <div class="text">
+                <strong>WORK IN PROGRESS:</strong> Dieses Tool ist noch im Aufbau und nicht fertig. Werte können noch angepasst werden!
+            </div>
+        </div>
+
+        <!-- Selection -->
+        <div class="selection-grid">
+            <div class="select-group">
+                <label for="filament-select">Filament</label>
+                <select id="filament-select">
+                    <option value="">Filament wählen...</option>
+                </select>
+            </div>
+            <div class="select-group">
+                <label for="nozzle-select">Düse</label>
+                <select id="nozzle-select">
+                    <option value="">Düse wählen...</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div class="results" id="results" style="display: none;">
+            <!-- Temperaturen -->
+            <div class="category">
+                <div class="category-title">
+                    🌡️ Temperaturen
+                </div>
+                <div class="param-grid">
+                    <div class="param-item">
+                        <div class="param-label">Düsentemperatur</div>
+                        <div class="param-value-wrapper">
+                            <input type="text" class="param-value" id="val-nozzle-temp" readonly>
+                            <button class="copy-btn" onclick="copyValue('val-nozzle-temp')">📋</button>
+                        </div>
+                    </div>
+                    <div class="param-item">
+                        <div class="param-label">Betttemperatur</div>
+                        <div class="param-value-wrapper">
+                            <input type="text" class="param-value" id="val-bed-temp" readonly>
+                            <button class="copy-btn" onclick="copyValue('val-bed-temp')">📋</button>
+                        </div>
+                    </div>
+                    <div class="param-item">
+                        <div class="param-label">Bett (erste Schicht)</div>
+                        <div class="param-value-wrapper">
+                            <input type="text" class="param-value" id="val-bed-temp-first" readonly>
+                            <button class="copy-btn" onclick="copyValue('val-bed-temp-first')">📋</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Geschwindigkeiten -->
+            <div class="category">
+                <div class="category-title">
+                    ⚡ Geschwindigkeiten
+                    <span class="info-badge">mm/s</span>
+                </div>
+                <div class="param-grid">
+                    <div class="param-item">
+                        <div class="param-label">Außenwand</div>
+                        <div class="param-value-wrapper">
+                            <input type="text" class="param-value" id="val-speed-outer" readonly>
+                            <button class="copy-btn" onclick="copyValue('val-speed-outer')">📋</button>
+                        </div>
+                    </div>
+                    <div class="param-item">
+                        <div class="param-label">Innenwand</div>
+                        <div class="param-value-wrapper">
+                            <input type="text" class="param-value" id="val-speed-inner" readonly>
+                            <button class="copy-btn" onclick="copyValue('val-speed-inner')">📋</button>
+                        </div>
+                    </div>
+                    <div class="param-item">
+                        <div class="param-label">Infill</div>
+                        <div class="param-value-wrapper">
+                            <input type="text" class="param-value" id="val-speed-infill" readonly>
+                            <button class="copy-btn" onclick="copyValue('val-speed-infill')">📋</button>
+                        </div>
+                    </div>
+                    <div class="param-item">
+                        <div class="param-label">Travel</div>
+                        <div class="param-value-wrapper">
+                            <input type="text" class="param-value" id="val-speed-travel" readonly>
+                            <button class="copy-btn" onclick="copyValue('val-speed-travel')">📋</button>
+                        </div>
+                    </div>
+                    <div class="param-item">
+                        <div class="param-label">Erste Schicht</div>
+                        <div class="param-value-wrapper">
+                            <input type="text" class="param-value" id="val-speed-first" readonly>
+                            <button class="copy-btn" onclick="copyValue('val-speed-first')">📋</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Flow & Extrusion -->
+            <div class="category">
+                <div class="category-title">
+                    💧 Flow & Extrusion
+                </div>
+                <div class="param-grid">
+                    <div class="param-item">
+                        <div class="param-label">Flow Ratio</div>
+                        <div class="param-value-wrapper">
+                            <input type="text" class="param-value" id="val-flow" readonly>
+                            <button class="copy-btn" onclick="copyValue('val-flow')">📋</button>
+                        </div>
+                    </div>
+                    <div class="param-item">
+                        <div class="param-label">Line Width</div>
+                        <div class="param-value-wrapper">
+                            <input type="text" class="param-value" id="val-line-width" readonly>
+                            <button class="copy-btn" onclick="copyValue('val-line-width')">📋</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Retraction -->
+            <div class="category">
+                <div class="category-title">
+                    ↩️ Retraction
+                </div>
+                <div class="param-grid">
+                    <div class="param-item">
+                        <div class="param-label">Retraction Länge (mm)</div>
+                        <div class="param-value-wrapper">
+                            <input type="text" class="param-value" id="val-retract-length" readonly>
+                            <button class="copy-btn" onclick="copyValue('val-retract-length')">📋</button>
+                        </div>
+                    </div>
+                    <div class="param-item">
+                        <div class="param-label">Retraction Speed (mm/s)</div>
+                        <div class="param-value-wrapper">
+                            <input type="text" class="param-value" id="val-retract-speed" readonly>
+                            <button class="copy-btn" onclick="copyValue('val-retract-speed')">📋</button>
+                        </div>
+                    </div>
+                    <div class="param-item">
+                        <div class="param-label">Z-Hop (mm)</div>
+                        <div class="param-value-wrapper">
+                            <input type="text" class="param-value" id="val-zhop" readonly>
+                            <button class="copy-btn" onclick="copyValue('val-zhop')">📋</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Layer-Einstellungen -->
+            <div class="category">
+                <div class="category-title">
+                    📏 Layer-Einstellungen
+                    <span class="info-badge">mm</span>
+                </div>
+                <div class="param-grid">
+                    <div class="param-item">
+                        <div class="param-label">Empfohlene Schichthöhe</div>
+                        <div class="param-value-wrapper">
+                            <input type="text" class="param-value" id="val-layer-height" readonly>
+                            <button class="copy-btn" onclick="copyValue('val-layer-height')">📋</button>
+                        </div>
+                    </div>
+                    <div class="param-item">
+                        <div class="param-label">Erste Schichthöhe</div>
+                        <div class="param-value-wrapper">
+                            <input type="text" class="param-value" id="val-first-layer-height" readonly>
+                            <button class="copy-btn" onclick="copyValue('val-first-layer-height')">📋</button>
+                        </div>
+                    </div>
+                    <div class="param-item">
+                        <div class="param-label">Max. Schichthöhe</div>
+                        <div class="param-value-wrapper">
+                            <input type="text" class="param-value" id="val-max-layer-height" readonly>
+                            <button class="copy-btn" onclick="copyValue('val-max-layer-height')">📋</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Kühlung -->
+            <div class="category">
+                <div class="category-title">
+                    🌬️ Kühlung
+                    <span class="info-badge">%</span>
+                </div>
+                <div class="param-grid">
+                    <div class="param-item">
+                        <div class="param-label">Lüfter Min</div>
+                        <div class="param-value-wrapper">
+                            <input type="text" class="param-value" id="val-fan-min" readonly>
+                            <button class="copy-btn" onclick="copyValue('val-fan-min')">📋</button>
+                        </div>
+                    </div>
+                    <div class="param-item">
+                        <div class="param-label">Lüfter Max</div>
+                        <div class="param-value-wrapper">
+                            <input type="text" class="param-value" id="val-fan-max" readonly>
+                            <button class="copy-btn" onclick="copyValue('val-fan-max')">📋</button>
+                        </div>
+                    </div>
+                    <div class="param-item">
+                        <div class="param-label">Lüfter Standard</div>
+                        <div class="param-value-wrapper">
+                            <input type="text" class="param-value" id="val-fan-default" readonly>
+                            <button class="copy-btn" onclick="copyValue('val-fan-default')">📋</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // === FILAMENT DATABASE ===
+        const FILAMENTS = {
+            'prusament_pla': {
+                name: 'Prusament PLA',
+                type: 'PLA',
+                // Temperaturen
+                nozzle_temp: 215,
+                nozzle_temp_range: [200, 230],
+                bed_temp: 60,
+                bed_temp_first: 60,
+
+                // Geschwindigkeiten (mm/s) - Basis für 0.4mm Düse
+                speed_outer_wall: 50,
+                speed_inner_wall: 100,
+                speed_infill: 150,
+                speed_travel: 150,
+                speed_first_layer: 30,
+
+                // Flow
+                flow_ratio: 1.0,
+
+                // Retraction (für Prusa Mini+ Direct Drive)
+                retraction_length: 3.2,
+                retraction_speed: 40,
+                z_hop: 0.2,
+
+                // Cooling
+                fan_min: 0,
+                fan_max: 100,
+                fan_default: 100,
+
+                // Layer
+                layer_height_recommended: 0.2,
+                first_layer_height: 0.2
+            },
+            'prusament_petg': {
+                name: 'Prusament PETG',
+                type: 'PETG',
+                nozzle_temp: 245,
+                nozzle_temp_range: [230, 255],
+                bed_temp: 85,
+                bed_temp_first: 85,
+
+                speed_outer_wall: 40,
+                speed_inner_wall: 80,
+                speed_infill: 120,
+                speed_travel: 150,
+                speed_first_layer: 25,
+
+                flow_ratio: 1.0,
+
+                retraction_length: 2.5,
+                retraction_speed: 35,
+                z_hop: 0.3,
+
+                fan_min: 20,
+                fan_max: 50,
+                fan_default: 30,
+
+                layer_height_recommended: 0.2,
+                first_layer_height: 0.2
+            }
+        };
+
+        // === NOZZLE DATABASE ===
+        const NOZZLES = {
+            'prusa_04': {
+                name: 'Prusa Standard 0.4mm (Messing)',
+                size: 0.4,
+                material: 'brass',
+                // Multiplikatoren
+                speed_multiplier: 1.0,
+                flow_adjustment: 0,
+                max_layer_height: 0.3,
+                line_width: 0.45,
+                extrusion_width_factor: 1.125
+            },
+            'e3d_08': {
+                name: 'E3D V6 0.8mm',
+                size: 0.8,
+                material: 'brass',
+                speed_multiplier: 1.5,
+                flow_adjustment: 0,
+                max_layer_height: 0.6,
+                line_width: 0.9,
+                extrusion_width_factor: 1.125
+            }
+        };
+
+        // === DOM Elements ===
+        const filamentSelect = document.getElementById('filament-select');
+        const nozzleSelect = document.getElementById('nozzle-select');
+        const resultsContainer = document.getElementById('results');
+
+        // === Initialize Dropdowns ===
+        function initializeDropdowns() {
+            // Populate Filaments
+            Object.entries(FILAMENTS).forEach(([key, filament]) => {
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = filament.name;
+                filamentSelect.appendChild(option);
+            });
+
+            // Populate Nozzles
+            Object.entries(NOZZLES).forEach(([key, nozzle]) => {
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = nozzle.name;
+                nozzleSelect.appendChild(option);
+            });
+        }
+
+        // === Calculate Parameters ===
+        function calculate() {
+            const filamentKey = filamentSelect.value;
+            const nozzleKey = nozzleSelect.value;
+
+            if (!filamentKey || !nozzleKey) {
+                resultsContainer.style.display = 'none';
+                return;
+            }
+
+            const filament = FILAMENTS[filamentKey];
+            const nozzle = NOZZLES[nozzleKey];
+
+            // Calculate values
+            const results = {
+                nozzle_temp: `${filament.nozzle_temp}°C`,
+                bed_temp: `${filament.bed_temp}°C`,
+                bed_temp_first: `${filament.bed_temp_first}°C`,
+
+                speed_outer: Math.round(filament.speed_outer_wall * nozzle.speed_multiplier),
+                speed_inner: Math.round(filament.speed_inner_wall * nozzle.speed_multiplier),
+                speed_infill: Math.round(filament.speed_infill * nozzle.speed_multiplier),
+                speed_travel: Math.round(filament.speed_travel * nozzle.speed_multiplier),
+                speed_first: Math.round(filament.speed_first_layer * nozzle.speed_multiplier),
+
+                flow: (filament.flow_ratio + nozzle.flow_adjustment).toFixed(2),
+                line_width: `${nozzle.line_width} mm`,
+
+                retract_length: filament.retraction_length.toFixed(1),
+                retract_speed: filament.retraction_speed,
+                zhop: filament.z_hop.toFixed(1),
+
+                layer_height: filament.layer_height_recommended.toFixed(2),
+                first_layer_height: filament.first_layer_height.toFixed(2),
+                max_layer_height: nozzle.max_layer_height.toFixed(2),
+
+                fan_min: filament.fan_min,
+                fan_max: filament.fan_max,
+                fan_default: filament.fan_default
+            };
+
+            // Update UI
+            document.getElementById('val-nozzle-temp').value = results.nozzle_temp;
+            document.getElementById('val-bed-temp').value = results.bed_temp;
+            document.getElementById('val-bed-temp-first').value = results.bed_temp_first;
+
+            document.getElementById('val-speed-outer').value = results.speed_outer;
+            document.getElementById('val-speed-inner').value = results.speed_inner;
+            document.getElementById('val-speed-infill').value = results.speed_infill;
+            document.getElementById('val-speed-travel').value = results.speed_travel;
+            document.getElementById('val-speed-first').value = results.speed_first;
+
+            document.getElementById('val-flow').value = results.flow;
+            document.getElementById('val-line-width').value = results.line_width;
+
+            document.getElementById('val-retract-length').value = results.retract_length;
+            document.getElementById('val-retract-speed').value = results.retract_speed;
+            document.getElementById('val-zhop').value = results.zhop;
+
+            document.getElementById('val-layer-height').value = results.layer_height;
+            document.getElementById('val-first-layer-height').value = results.first_layer_height;
+            document.getElementById('val-max-layer-height').value = results.max_layer_height;
+
+            document.getElementById('val-fan-min').value = results.fan_min;
+            document.getElementById('val-fan-max').value = results.fan_max;
+            document.getElementById('val-fan-default').value = results.fan_default;
+
+            resultsContainer.style.display = 'flex';
+        }
+
+        // === Copy to Clipboard ===
+        function copyValue(elementId) {
+            const input = document.getElementById(elementId);
+            input.select();
+            input.setSelectionRange(0, 99999); // Mobile
+
+            navigator.clipboard.writeText(input.value).then(() => {
+                // Visual feedback
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = '✓';
+                btn.classList.add('copied');
+
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.classList.remove('copied');
+                }, 1000);
+            });
+        }
+
+        // === Event Listeners ===
+        filamentSelect.addEventListener('change', calculate);
+        nozzleSelect.addEventListener('change', calculate);
+
+        // === Initialize ===
+        initializeDropdowns();
+    </script>
+</body>
+</html>

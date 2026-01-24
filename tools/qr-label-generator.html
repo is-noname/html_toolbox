@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR-Code Label Generator</title>
+    
+    <!-- QR-Code Library von CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <style>
+        /* ===== SCREEN STYLES (für Browser-Ansicht) ===== */
+        @media screen {
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+                background: #f5f5f5;
+                padding: 20px;
+            }
+            
+            .container {
+                max-width: 800px;
+                margin: 0 auto;
+                background: white;
+                border-radius: 12px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                padding: 30px;
+            }
+            
+            h1 {
+                margin-bottom: 30px;
+                color: #333;
+            }
+            
+            .input-group {
+                margin-bottom: 20px;
+            }
+            
+            label {
+                display: block;
+                margin-bottom: 8px;
+                color: #555;
+                font-weight: 500;
+            }
+            
+            input[type="text"],
+            input[type="number"],
+            select {
+                width: 100%;
+                padding: 12px;
+                border: 2px solid #ddd;
+                border-radius: 8px;
+                font-size: 16px;
+                transition: border-color 0.3s;
+            }
+            
+            input:focus,
+            select:focus {
+                outline: none;
+                border-color: #007AFF;
+            }
+            
+            button {
+                background: #007AFF;
+                color: white;
+                border: none;
+                padding: 14px 28px;
+                border-radius: 8px;
+                font-size: 16px;
+                font-weight: 600;
+                cursor: pointer;
+                margin-right: 10px;
+                transition: background 0.3s;
+            }
+            
+            button:hover {
+                background: #0056b3;
+            }
+            
+            button.secondary {
+                background: #6c757d;
+            }
+            
+            button.secondary:hover {
+                background: #545b62;
+            }
+            
+            .preview-section {
+                margin-top: 40px;
+                padding-top: 30px;
+                border-top: 2px solid #eee;
+            }
+            
+            .preview-box {
+                background: white;
+                border: 2px dashed #ddd;
+                border-radius: 8px;
+                padding: 40px;
+                text-align: center;
+                min-height: 200px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            #labelPreview {
+                display: inline-flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 10px;
+            }
+            
+            .label-title {
+                font-weight: 600;
+                color: #333;
+                word-wrap: break-word;
+                text-align: center;
+            }
+            
+            #qrcode {
+                display: inline-block;
+            }
+            
+            .info-text {
+                color: #888;
+                font-size: 14px;
+                margin-top: 20px;
+            }
+        }
+        
+        /* ===== PRINT STYLES (für mm-genauen Druck) ===== */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+                margin: 0;
+            }
+            
+            .container {
+                box-shadow: none;
+                padding: 0;
+                max-width: none;
+            }
+            
+            h1,
+            .input-group,
+            button,
+            .info-text {
+                display: none !important;
+            }
+            
+            .preview-section {
+                margin: 0;
+                padding: 0;
+                border: none;
+            }
+            
+            .preview-box {
+                border: none;
+                padding: 0;
+                min-height: auto;
+            }
+            
+            #labelPreview {
+                gap: 5mm; /* Abstand zwischen Titel und QR-Code */
+            }
+            
+            /* Sicherstellen dass die mm-Größe exakt ist */
+            @page {
+                margin: 10mm;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📱 QR-Code Label Generator</h1>
+        
+        <!-- ===== INPUT BEREICH ===== -->
+        <div class="input-group">
+            <label for="qrContent">QR-Code Inhalt (URL, Text, etc.)</label>
+            <input type="text" id="qrContent" placeholder="z.B. https://example.com oder beliebiger Text">
+        </div>
+        
+        <div class="input-group">
+            <label for="labelTitle">Titel für Label</label>
+            <input type="text" id="labelTitle" placeholder="z.B. Produktname, Artikelnummer, etc.">
+        </div>
+        
+        <div class="input-group">
+            <label for="qrSize">QR-Code Größe (mm)</label>
+            <input type="number" id="qrSize" value="50" min="10" max="200" step="5">
+        </div>
+        
+        <div class="input-group">
+            <label for="titlePosition">Titel-Position</label>
+            <select id="titlePosition">
+                <option value="top">Über dem QR-Code</option>
+                <option value="bottom">Unter dem QR-Code</option>
+            </select>
+        </div>
+        
+        <button onclick="generateLabel()">QR-Code generieren</button>
+        <button class="secondary" onclick="window.print()">Drucken</button>
+        
+        <!-- ===== PREVIEW BEREICH ===== -->
+        <div class="preview-section">
+            <h2>Vorschau</h2>
+            <div class="preview-box">
+                <div id="labelPreview">
+                    <p style="color: #999;">Fülle die Felder aus und klicke auf "QR-Code generieren"</p>
+                </div>
+            </div>
+            <p class="info-text">💡 Tipp: Nutze "Drucken" um das Label auszudrucken. Die mm-Größe wird beim Druck exakt umgesetzt.</p>
+        </div>
+    </div>
+
+    <script>
+        // ===== GLOBALE VARIABLEN =====
+        let currentQRCode = null;
+        
+        // ===== HAUPTFUNKTION: QR-CODE GENERIEREN =====
+        function generateLabel() {
+            // Input-Werte holen
+            const content = document.getElementById('qrContent').value.trim();
+            const title = document.getElementById('labelTitle').value.trim();
+            const sizeInMM = parseInt(document.getElementById('qrSize').value);
+            const titlePosition = document.getElementById('titlePosition').value;
+            
+            // Validation: QR-Content ist Pflicht
+            if (!content) {
+                alert('Bitte gib einen Inhalt für den QR-Code ein!');
+                return;
+            }
+            
+            // Preview-Container leeren
+            const previewContainer = document.getElementById('labelPreview');
+            previewContainer.innerHTML = '';
+            
+            // Alte QR-Code Instanz löschen falls vorhanden
+            if (currentQRCode) {
+                currentQRCode.clear();
+            }
+            
+            // ===== MM ZU PIXEL UMRECHNUNG =====
+            // Standard Browser DPI: 96 dpi
+            // 1 inch = 25.4 mm
+            // Formel: mm * 96 / 25.4 = pixel
+            const pixelSize = Math.round(sizeInMM * 96 / 25.4);
+            
+            // ===== TITEL ELEMENT ERSTELLEN (falls vorhanden) =====
+            let titleElement = null;
+            if (title) {
+                titleElement = document.createElement('div');
+                titleElement.className = 'label-title';
+                titleElement.textContent = title;
+                
+                // Schriftgröße dynamisch an QR-Größe anpassen
+                const fontSize = Math.max(12, Math.round(pixelSize * 0.12));
+                titleElement.style.fontSize = fontSize + 'px';
+                titleElement.style.maxWidth = pixelSize + 'px';
+            }
+            
+            // ===== QR-CODE CONTAINER ERSTELLEN =====
+            const qrContainer = document.createElement('div');
+            qrContainer.id = 'qrcode';
+            
+            // ===== ELEMENTE IN RICHTIGER REIHENFOLGE EINFÜGEN =====
+            if (titlePosition === 'top' && titleElement) {
+                previewContainer.appendChild(titleElement);
+            }
+            
+            previewContainer.appendChild(qrContainer);
+            
+            if (titlePosition === 'bottom' && titleElement) {
+                previewContainer.appendChild(titleElement);
+            }
+            
+            // ===== QR-CODE GENERIEREN =====
+            currentQRCode = new QRCode(qrContainer, {
+                text: content,
+                width: pixelSize,
+                height: pixelSize,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H // Höchste Fehlerkorrektur für beste Scanbarkeit
+            });
+            
+            // ===== MM-GRÖSSE FÜR PRINT SETZEN =====
+            // Wichtig: Im Print-CSS wird die Größe in mm gesetzt
+            setTimeout(() => {
+                const qrImg = qrContainer.querySelector('img');
+                if (qrImg) {
+                    qrImg.style.width = sizeInMM + 'mm';
+                    qrImg.style.height = sizeInMM + 'mm';
+                    // Für Screen-Darstellung zusätzlich Pixel-Größe
+                    qrImg.style.maxWidth = pixelSize + 'px';
+                    qrImg.style.maxHeight = pixelSize + 'px';
+                }
+            }, 100);
+        }
+        
+        // ===== ENTER-TASTE UNTERSTÜTZUNG =====
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputs = document.querySelectorAll('input');
+            inputs.forEach(input => {
+                input.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        generateLabel();
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
