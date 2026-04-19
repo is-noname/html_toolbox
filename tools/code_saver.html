@@ -5,52 +5,341 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Code Saver</title>
   <style>
-    /* Grundlayout für die Seite */
-    body {font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:800px;margin:0 auto;padding:20px;background:#f5f5f5;color:#333;}
-    h1 {text-align:center;}
-    .form-group {margin:1em 0;}
-    .options {display:flex;flex-wrap:wrap;gap:5px;}
-    .format-option {padding:5px 10px;border:1px solid #ccc;border-radius:4px;cursor:pointer;}
-    .format-option.active {background:#ddd;}
-    .custom-format, .filename-row, .clipboard-row {display:flex;gap:5px;margin-top:5px;}
-    #code {width:100%;height:400px;font-family:monospace;padding:10px;border:1px solid #ccc;border-radius:4px;}
-    #status {position:fixed;top:10px;right:10px;padding:10px;border-radius:4px;display:none;}
+    /* Base Styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: #1a1a1a;
+      color: #f5f5f5;
+      padding: 24px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    /* Typography */
+    h1 {
+      font-size: 2rem;
+      text-align: center;
+      margin-bottom: 32px;
+      color: #f5f5f5;
+    }
+
+    /* Form Groups */
+    .form-group {
+      margin-bottom: 24px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: #f5f5f5;
+    }
+
+    /* Textarea */
+    #code {
+      width: 100%;
+      min-height: 400px;
+      padding: 16px;
+      border: 1px solid #333;
+      border-radius: 8px;
+      background-color: #2a2a2a;
+      color: #f5f5f5;
+      font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
+      font-size: 14px;
+      line-height: 1.6;
+      resize: vertical;
+      transition: border-color 0.2s ease;
+    }
+
+    #code:focus {
+      outline: none;
+      border-color: #06fc99;
+      box-shadow: 0 0 0 2px rgba(6, 252, 153, 0.2);
+    }
+
+    #code::placeholder {
+      color: #777;
+    }
+
+    /* Buttons */
+    button {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      min-height: 44px;
+    }
+
+    button:focus {
+      outline: 2px solid #06fc99;
+      outline-offset: 2px;
+    }
+
+    /* Primary Button */
+    .btn-primary {
+      background-color: #06fc99;
+      color: #1a1a1a;
+    }
+
+    .btn-primary:hover {
+      opacity: 0.8;
+    }
+
+    .btn-primary:active {
+      transform: scale(0.98);
+    }
+
+    /* Secondary Button */
+    .btn-secondary {
+      background-color: #2a2a2a;
+      color: #f5f5f5;
+      border: 1px solid #333;
+    }
+
+    .btn-secondary:hover {
+      background-color: #333;
+    }
+
+    /* Danger Button */
+    .btn-danger {
+      background-color: #2a2a2a;
+      color: #ff6b6b;
+      border: 1px solid #333;
+    }
+
+    .btn-danger:hover {
+      background-color: #333;
+      border-color: #ff6b6b;
+    }
+
+    /* Input Fields */
+    input[type="text"] {
+      padding: 12px 16px;
+      border: 1px solid #333;
+      border-radius: 6px;
+      background-color: #2a2a2a;
+      color: #f5f5f5;
+      font-size: 16px;
+      transition: border-color 0.2s ease;
+      min-height: 44px;
+    }
+
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #06fc99;
+      box-shadow: 0 0 0 2px rgba(6, 252, 153, 0.2);
+    }
+
+    input[type="text"]::placeholder {
+      color: #777;
+    }
+
+    /* Format Options */
+    .format-options-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .format-option {
+      padding: 8px 16px;
+      border: 1px solid #333;
+      border-radius: 6px;
+      background-color: #2a2a2a;
+      color: #f5f5f5;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 500;
+      text-transform: uppercase;
+    }
+
+    .format-option:hover {
+      background-color: #333;
+    }
+
+    .format-option.active {
+      background-color: #06fc99;
+      color: #1a1a1a;
+      border-color: #06fc99;
+    }
+
+    .format-option:focus {
+      outline: 2px solid #06fc99;
+      outline-offset: 2px;
+    }
+
+    /* Flex Rows */
+    .row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .row input[type="text"] {
+      flex: 1;
+      min-width: 150px;
+    }
+
+    /* Helper Text */
+    .helper-text {
+      color: #aaa;
+      font-size: 14px;
+      margin-left: 8px;
+    }
+
+    /* Status Messages */
+    #status {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      padding: 16px 24px;
+      border-radius: 8px;
+      font-weight: 500;
+      display: none;
+      z-index: 1000;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    #status.success {
+      background-color: #06fc99;
+      color: #1a1a1a;
+    }
+
+    #status.error {
+      background-color: #ff6b6b;
+      color: #fff;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      body {
+        padding: 16px;
+      }
+
+      h1 {
+        font-size: 1.5rem;
+        margin-bottom: 24px;
+      }
+
+      #code {
+        min-height: 300px;
+        font-size: 13px;
+      }
+
+      .row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .row input[type="text"],
+      .row button {
+        width: 100%;
+      }
+
+      .helper-text {
+        margin-left: 0;
+        margin-top: 4px;
+      }
+
+      #status {
+        right: 16px;
+        left: 16px;
+        top: 16px;
+      }
+    }
   </style>
 </head>
 <body>
-  <h1>Code Saver</h1>
+  <div class="container">
+    <h1>Code Saver</h1>
 
-  <!-- Zwischenablage-Button -->
-  <div class="form-group clipboard-row">
-    <button id="paste-btn">Aus Zwischenablage einfügen</button>
-    <span>fügt Text aus der Zwischenablage in das Code-Feld ein</span>
-  </div>
+    <!-- Clipboard Button -->
+    <div class="form-group">
+      <div class="row">
+        <button id="paste-btn" class="btn-secondary">Aus Zwischenablage einfügen</button>
+        <span class="helper-text">Fügt Text aus der Zwischenablage ein</span>
+      </div>
+    </div>
 
-  <textarea id="code" placeholder="Hier deinen Code eingeben..."></textarea>
+    <!-- Code Textarea -->
+    <div class="form-group">
+      <textarea id="code" placeholder="Hier deinen Code eingeben..." aria-label="Code eingeben"></textarea>
+    </div>
 
-  <div class="form-group">
-    <label>Format auswählen:</label>
-    <div class="options" id="format-options"></div>
-    <div class="custom-format">
-      <input type="text" id="custom-format" placeholder="Eigenes Format (z.B. md)" maxlength="10">
-      <button id="add-format">Einfügen</button>
+    <!-- Format Selection -->
+    <div class="form-group">
+      <label for="format-options">Format auswählen:</label>
+      <div class="format-options-container" id="format-options" role="group" aria-label="Dateiformat auswählen"></div>
+
+      <div class="row">
+        <input
+          type="text"
+          id="custom-format"
+          placeholder="Eigenes Format (z.B. md)"
+          maxlength="10"
+          aria-label="Eigenes Format eingeben"
+        >
+        <button id="add-format" class="btn-secondary">Format hinzufügen</button>
+      </div>
+    </div>
+
+    <!-- Filename and Actions -->
+    <div class="form-group">
+      <label for="filename">Dateiname:</label>
+      <div class="row">
+        <input
+          type="text"
+          id="filename"
+          placeholder="main"
+          value="main"
+          aria-label="Dateiname"
+        >
+        <button id="download-btn" class="btn-primary">Herunterladen</button>
+        <button id="clear-btn" class="btn-danger">Alles löschen</button>
+      </div>
     </div>
   </div>
 
-  <div class="form-group">
-    <label>Dateiname:</label>
-    <div class="filename-row">
-      <input type="text" id="filename" placeholder="main" value="main">
-      <button id="download-btn">Herunterladen</button>
-      <button id="clear-btn">Alles löschen</button>
-    </div>
-  </div>
-
-  <div id="status"></div>
+  <!-- Status Message -->
+  <div id="status" role="alert" aria-live="polite"></div>
 
   <script>
   (function() {
-    // DOM-Elemente & State
+    'use strict';
+
+    // DOM Elements
     const codeEl = document.getElementById('code');
     const pasteBtn = document.getElementById('paste-btn');
     const formatContainer = document.getElementById('format-options');
@@ -60,93 +349,168 @@
     const clearBtn = document.getElementById('clear-btn');
     const fileNameEl = document.getElementById('filename');
     const statusDiv = document.getElementById('status');
-    const defaultFormats = ['md','csv','html','json','py','txt','js','css','jsx','ts','mmd','puml'];
-    let formats = [...defaultFormats, ...loadCustom()];
 
-    // Clipboard einfügen
-    pasteBtn.addEventListener('click', async () => {
+    // Default Formats
+    const DEFAULT_FORMATS = ['md', 'csv', 'html', 'json', 'py', 'txt', 'js', 'css', 'jsx', 'ts', 'mmd', 'puml'];
+    let formats = [...DEFAULT_FORMATS, ...loadCustomFormats()];
+
+    // Initialize
+    renderFormats();
+
+    // Event Listeners
+    pasteBtn.addEventListener('click', handlePaste);
+    addBtn.addEventListener('click', handleAddFormat);
+    downloadBtn.addEventListener('click', handleDownload);
+    clearBtn.addEventListener('click', handleClear);
+
+    // Keyboard shortcut for save (Ctrl/Cmd + S)
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        handleDownload();
+      }
+    });
+
+    // Functions
+    async function handlePaste() {
       try {
         const text = await navigator.clipboard.readText();
         codeEl.value = text;
-        showStatus('Zwischenablage eingefügt');
+        showStatus('Zwischenablage erfolgreich eingefügt', 'success');
       } catch (err) {
-        showStatus('Fehler beim Einfügen', 'error');
+        console.error('Clipboard error:', err);
+        showStatus('Fehler beim Einfügen. Bitte Browser-Berechtigung prüfen.', 'error');
       }
-    });
-
-    // Format-Optionen rendern
-    function renderFormats() {
-      formatContainer.innerHTML = '';
-      formats.forEach(fmt => {
-        const el = document.createElement('div');
-        el.className = 'format-option';
-        el.dataset.format = fmt;
-        el.textContent = fmt;
-        el.addEventListener('click', () => selectFormat(el));
-        formatContainer.appendChild(el);
-      });
-      if (formatContainer.firstChild) selectFormat(formatContainer.firstChild);
     }
 
-    function selectFormat(el) {
-      Array.from(formatContainer.children).forEach(o => o.classList.remove('active'));
-      el.classList.add('active');
-    }
+    function handleAddFormat() {
+      const fmt = customInput.value.trim().toLowerCase();
 
-    function loadCustom() {
-      try { return JSON.parse(localStorage.getItem('customFormats')) || []; }
-      catch { return []; }
-    }
-
-    function saveCustom() {
-      const customs = formats.filter(f => !defaultFormats.includes(f));
-      localStorage.setItem('customFormats', JSON.stringify(customs));
-    }
-
-    function showStatus(msg, type = 'success') {
-      statusDiv.textContent = msg;
-      statusDiv.style.background = type === 'error' ? '#f8d7da' : '#d4edda';
-      statusDiv.style.border = type === 'error' ? '1px solid #f5c6cb' : '1px solid #c3e6cb';
-      statusDiv.style.display = 'block';
-      setTimeout(() => { statusDiv.style.display = 'none'; }, 3000);
-    }
-
-    addBtn.addEventListener('click', () => {
-      const fmt = customInput.value.trim();
-      if (/^[A-Za-z0-9]+$/.test(fmt) && !formats.includes(fmt)) {
-        formats.push(fmt);
-        saveCustom();
-        renderFormats();
-        customInput.value = '';
-        showStatus(`.${fmt} hinzugefügt!`);
-      } else {
-        showStatus('Ungültiges oder vorhandenes Format', 'error');
+      // Validation
+      if (!fmt) {
+        showStatus('Bitte ein Format eingeben', 'error');
+        return;
       }
-    });
 
-    downloadBtn.addEventListener('click', () => {
-      const fmt = document.querySelector('.format-option.active').dataset.format;
-      const blob = new Blob([codeEl.value], { type: 'text/plain' });
+      if (!/^[a-z0-9]+$/.test(fmt)) {
+        showStatus('Nur Buchstaben und Zahlen erlaubt', 'error');
+        return;
+      }
+
+      if (formats.includes(fmt)) {
+        showStatus('Format bereits vorhanden', 'error');
+        return;
+      }
+
+      // Add format
+      formats.push(fmt);
+      saveCustomFormats();
+      renderFormats();
+      customInput.value = '';
+      showStatus(`.${fmt} erfolgreich hinzugefügt!`, 'success');
+    }
+
+    function handleDownload() {
+      const activeFormat = formatContainer.querySelector('.format-option.active');
+
+      if (!activeFormat) {
+        showStatus('Bitte ein Format auswählen', 'error');
+        return;
+      }
+
+      const fmt = activeFormat.dataset.format;
+      const filename = fileNameEl.value.trim() || 'main';
+      const content = codeEl.value;
+
+      if (!content) {
+        showStatus('Bitte Code eingeben', 'error');
+        return;
+      }
+
+      // Create and download file
+      const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
-      link.download = `${fileNameEl.value}.${fmt}`;
+      link.download = `${filename}.${fmt}`;
       link.click();
+
+      // Cleanup
       URL.revokeObjectURL(link.href);
-      showStatus('Datei heruntergeladen');
-    });
+      showStatus(`${filename}.${fmt} heruntergeladen`, 'success');
+    }
 
-    clearBtn.addEventListener('click', () => {
-      if (confirm('Wirklich alles löschen?')) codeEl.value = '';
-    });
-
-    document.addEventListener('keydown', e => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-        e.preventDefault();
-        downloadBtn.click();
+    function handleClear() {
+      if (confirm('Wirklich alles löschen?')) {
+        codeEl.value = '';
+        showStatus('Code gelöscht', 'success');
       }
-    });
+    }
 
-    renderFormats();
+    function renderFormats() {
+      formatContainer.innerHTML = '';
+
+      formats.forEach((fmt, index) => {
+        const button = document.createElement('button');
+        button.className = 'format-option';
+        button.dataset.format = fmt;
+        button.textContent = fmt;
+        button.type = 'button';
+        button.setAttribute('role', 'radio');
+        button.setAttribute('aria-checked', index === 0 ? 'true' : 'false');
+
+        button.addEventListener('click', () => selectFormat(button));
+
+        formatContainer.appendChild(button);
+      });
+
+      // Select first format by default
+      if (formatContainer.firstChild) {
+        selectFormat(formatContainer.firstChild);
+      }
+    }
+
+    function selectFormat(element) {
+      // Remove active class from all
+      const allOptions = formatContainer.querySelectorAll('.format-option');
+      allOptions.forEach(option => {
+        option.classList.remove('active');
+        option.setAttribute('aria-checked', 'false');
+      });
+
+      // Add active class to selected
+      element.classList.add('active');
+      element.setAttribute('aria-checked', 'true');
+    }
+
+    function loadCustomFormats() {
+      try {
+        const stored = localStorage.getItem('customFormats');
+        return stored ? JSON.parse(stored) : [];
+      } catch (err) {
+        console.error('Error loading custom formats:', err);
+        return [];
+      }
+    }
+
+    function saveCustomFormats() {
+      try {
+        const customFormats = formats.filter(f => !DEFAULT_FORMATS.includes(f));
+        localStorage.setItem('customFormats', JSON.stringify(customFormats));
+      } catch (err) {
+        console.error('Error saving custom formats:', err);
+      }
+    }
+
+    function showStatus(message, type = 'success') {
+      statusDiv.textContent = message;
+      statusDiv.className = type;
+      statusDiv.style.display = 'block';
+
+      // Auto-hide after 3 seconds
+      setTimeout(() => {
+        statusDiv.style.display = 'none';
+      }, 3000);
+    }
   })();
   </script>
 </body>
